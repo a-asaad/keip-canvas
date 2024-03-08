@@ -17,16 +17,25 @@ export type FlowType = "source" | "sink" | "passthru"
 
 export type Role = "endpoint" | "channel"
 
-export interface EipChildren {
+export interface EipChildGroup {
   indicator: "all" | "choice" | "sequence"
   elements: EipElement[]
 }
 
-export interface EipElement {
+interface EipElement {
   name: string
   description?: string
   attributes?: Attribute[]
-  children?: EipChildren
+  children?: EipChildGroup
+}
+
+interface Occurrence {
+  min?: number
+  max?: number | "unbounded"
+}
+
+export interface EipChildElement extends EipElement {
+  occurrence?: Occurrence
 }
 
 export interface EipComponent extends EipElement {

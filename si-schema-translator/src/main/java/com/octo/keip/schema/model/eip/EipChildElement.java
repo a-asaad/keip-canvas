@@ -1,8 +1,8 @@
-package com.octo.keip.schema.eip.definitions;
+package com.octo.keip.schema.model.eip;
 
 import java.util.Objects;
 
-public class EipChildElement extends EipElement {
+public final class EipChildElement extends EipElement {
 
   private final Occurrence occurrence;
 
@@ -40,5 +40,18 @@ public class EipChildElement extends EipElement {
     protected Builder self() {
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof EipChildElement that)) return false;
+    if (!super.equals(o)) return false;
+    return Objects.equals(occurrence, that.occurrence);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), occurrence);
   }
 }

@@ -1,4 +1,4 @@
-package com.octo.keip.schema.eip.definitions;
+package com.octo.keip.schema.model.eip;
 
 import com.google.gson.annotations.SerializedName;
 

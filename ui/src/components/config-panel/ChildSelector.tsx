@@ -1,10 +1,10 @@
 import { Checkbox, Form, RadioButton, RadioButtonGroup } from "@carbon/react"
-import { EipChildren } from "../../api/eipSchema"
+import { EipChildGroup } from "../../api/eipSchema"
 import { useAppActions, useGetChildren } from "../../singletons/store"
 
 interface ChildrenConfigProps {
   nodeId: string
-  eipChildren: EipChildren
+  eipChildren: EipChildGroup
 }
 
 interface ChildrenInputProps {

@@ -1,5 +1,5 @@
 import { Stack, TextArea, TextInput } from "@carbon/react"
-import { Attribute, EipChildren } from "../../api/eipSchema"
+import { Attribute, EipChildGroup } from "../../api/eipSchema"
 import { EipFlowNode } from "../../api/flow"
 import { ROOT_PARENT, useAppActions } from "../../singletons/store"
 import AttributeConfigForm from "./AttributeConfigForm"
@@ -9,7 +9,7 @@ import ConfigurationInputTabs from "./ConfigurationTabs"
 interface PanelContentProps {
   node: EipFlowNode
   attributes: Attribute[]
-  eipChildren?: EipChildren
+  eipChildren?: EipChildGroup
 }
 
 const NodeIdentifierInputs = ({ node }: { node: EipFlowNode }) => {

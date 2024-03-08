@@ -1,8 +1,8 @@
-package com.octo.keip.schema.eip.definitions;
+package com.octo.keip.schema.model.eip;
 
 public record Attribute(
     String name,
-    String type,
+    AttributeType type,
     String description,
     Object defaultValue,
     boolean required,
@@ -20,13 +20,13 @@ public record Attribute(
 
   public static class Builder {
     private final String name;
-    private final String type;
+    private final AttributeType type;
     private String description;
     private Object defaultValue;
     private boolean required;
     private Restriction restriction;
 
-    public Builder(String name, String type) {
+    public Builder(String name, AttributeType type) {
       this.name = name;
       this.type = type;
     }

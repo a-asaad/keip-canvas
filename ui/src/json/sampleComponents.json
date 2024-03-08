@@ -52,7 +52,7 @@
           "description": "Maximum amount of time in milliseconds to wait when sending a message to the channel if such channel may block. For example, a Queue Channel can block until space is available if its maximum capacity has been reached. Defaults to '-1' - blocking indefinitely."
         }
       ],
-      "children": {
+      "childGroup": {
         "indicator": "sequence",
         "elements": [
           {
@@ -114,7 +114,7 @@
                 "description": "Identifies channel that error messages will be sent to if a failure occurs in this poller's invocation. To completely suppress Exceptions, provide a reference to the 'nullChannel' here."
               }
             ],
-            "children": {
+            "childGroup": {
               "indicator": "choice",
               "elements": [
                 {
@@ -189,7 +189,7 @@
                       "description": "Reference to an instance of org.springframework.integration.transaction.TransactionSynchronizationFactory which will return an instance of org.springframework.transaction.support.TransactionSynchronization via its create(..) method."
                     }
                   ],
-                  "children": {
+                  "childGroup": {
                     "indicator": "sequence",
                     "elements": [
                       {

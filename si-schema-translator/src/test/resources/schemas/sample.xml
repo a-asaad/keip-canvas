@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://www.example.com/schema/default"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:tool="http://www.springframework.org/schema/tool"
+            targetNamespace="http://www.example.com/schema/default"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+    <xsd:element name="inbound-channel-adapter">
+        <xsd:annotation>
+            <xsd:documentation>
+                Defines a Polling Channel Adapter for the
+                'org.springframework.integration.endpoint.MethodInvokingMessageSource',
+                or 'org.springframework.integration.endpoint.ExpressionEvaluatingMessageSource'
+                or 'org.springframework.integration.scripting.ScriptExecutingMessageSource'
+                that receives from a MessageSource and sends to a
+                MessageChannel.
+                Note, when using the 'expression' attribute, or 'expression' or 'script'
+                sub-element,
+                there is not yet a root Message object and therefore
+                the 'payload' and 'headers' properties are not available in the expression or
+                script.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:choice minOccurs="0" maxOccurs="1">
+                    <xsd:sequence>
+                        <xsd:element name="poller" type="basePollerType"/>
+                        <xsd:choice minOccurs="0" maxOccurs="1">
+                            <xsd:element name="expression" type="innerExpressionType"/>
+                            <xsd:any namespace="##other"/>
+                        </xsd:choice>
+                    </xsd:sequence>
+                    <xsd:sequence>
+                        <xsd:choice>
+                            <xsd:element name="expression" type="innerExpressionType"/>
+                            <xsd:any namespace="##other"/>
+                        </xsd:choice>
+                        <xsd:element name="poller" type="basePollerType" minOccurs="0"
+                                     maxOccurs="1"/>
+                    </xsd:sequence>
+                </xsd:choice>
+                <xsd:element name="header" type="headerSubElementType" minOccurs="0"
+                             maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attributeGroup ref="methodInvokingOrExpressionEvaluatingAttributes"/>
+            <xsd:attributeGroup ref="channelAdapterAttributes"/>
+            <xsd:attribute name="send-timeout" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        Maximum amount of time in milliseconds to wait when sending a message to the
+                        channel
+                        if such channel may block.
+                        For example, a Queue Channel can block until space is available if its
+                        maximum capacity
+                        has been reached.
+                        Defaults to '-1' - blocking indefinitely.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="test-union-enum">
+                <xsd:simpleType>
+                    <xsd:union memberTypes="timeUnitEnumeration xsd:string"/>
+                </xsd:simpleType>
+            </xsd:attribute>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="basePollerType">
+        <xsd:annotation>
+            <xsd:documentation>
+                Defines the configuration metadata for a poller.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:choice>
+                <xsd:element name="transactional" type="transactionalType" minOccurs="0"
+                             maxOccurs="1">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            Run each poll task in a transaction; mutually exclusive
+                            with 'advice-chain'; add a transaction advice if you need transactions
+                            in addition to other advices.
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+                <xsd:element name="advice-chain" type="adviceChainType" minOccurs="0" maxOccurs="1">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            A chain of nested AOP 'Advice' objects applied to the poller task.
+                            Mutually exclusive with 'transactional'.
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+            </xsd:choice>
+        </xsd:sequence>
+        <xsd:attribute name="fixed-delay" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation>Fixed delay trigger (in milliseconds).</xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="ref" type="xsd:string" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>
+                    Allows this poller to reference another instance of a top-level poller.
+                    [IMPORTANT] - This attribute is only allowed on inner poller definitions.
+                    Defining this attribute on a top-level poller definition will result in a
+                    configuration exception.
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="fixed-rate" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation>Fixed rate trigger (in milliseconds).</xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="time-unit">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+	The java.util.concurrent.TimeUnit enum value. This can ONLY be used in combination
+	with the 'fixed-delay' or 'fixed-rate' attributes. If combined with either 'cron'
+	or a 'trigger' reference attribute, it will cause a failure. The minimal supported
+	granularity for a PeriodicTrigger is MILLISECONDS. Therefore, the only available options
+	are MILLISECONDS and SECONDS. If this value is not provided, then any 'fixed-delay' or
+	'fixed-rate' value will be interpreted as MILLISECONDS by default. Basically this enum
+	provides a convenience for SECONDS-based interval trigger values. For hourly, daily,
+	and monthly settings, consider using a 'cron' trigger instead.
+				]]></xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:union memberTypes="timeUnitEnumeration xsd:string"/>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="cron" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation>Cron trigger.</xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="trigger" type="xsd:string">
+            <xsd:annotation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type type="org.springframework.scheduling.Trigger"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="receive-timeout" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation>
+                    Only applies to polling consumers - the time the poll thread will wait
+                    after the trigger for a new message to arrive. Defaults to 1000 (1 second).
+                    For polled inbound channel adapters, whether or not the polling thread blocks is
+                    dependent on the message source implementation.
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="max-messages-per-poll" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation>
+                    The maximum number of messages that will be produced for each poll. Defaults to
+                    infinity (indicated by -1) for polling consumers, and 1 for polled
+                    inbound channel adapters.
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="task-executor" type="xsd:string">
+            <xsd:annotation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type type="org.springframework.core.task.TaskExecutor"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="error-channel" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+					Identifies channel that error messages will be sent to if a failure occurs in this
+					poller's invocation. To completely suppress Exceptions, provide a
+					reference to the "nullChannel" here.
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="innerExpressionType">
+        <xsd:attribute name="key" type="xsd:string" use="required">
+            <xsd:annotation>
+                <xsd:documentation>
+                    The key for retrieving the expression from an ExpressionSource.
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="source" type="xsd:string" default="expressionSource">
+            <xsd:annotation>
+                <xsd:documentation>
+                    The reference to an ExpressionSource.
+                </xsd:documentation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type
+                                type="org.springframework.integration.expression.ExpressionSource"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="headerSubElementType">
+        <xsd:annotation>
+            <xsd:documentation>    <![CDATA[
+				Provides mechanism to enrich content of the message with custom message headers. When this method is going to be invoked
+				the generated message will be enriched with these headers.
+			]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="name" type="xsd:string" use="required">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+					The name of the header
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="value" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+					The value of the header. Either this or 'expression' must be provided.
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="expression" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+					Expression to be evaluated to produce a value for the header.
+					Either this or 'value' must be provided.
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:attributeGroup name="methodInvokingOrExpressionEvaluatingAttributes">
+        <xsd:attribute name="ref" type="xsd:string">
+            <xsd:annotation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type type="java.lang.Object"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+                <xsd:documentation>
+                    A reference to a bean defined in the application context.
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="method" type="xsd:string">
+            <xsd:annotation>
+                <xsd:appinfo>
+                    <tool:annotation>
+                        <tool:expected-method type-ref="@ref"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+                <xsd:documentation>
+                    A method defined on the bean referenced by 'ref' attribute
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="expression" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation>
+                    SpEL expression to be evaluated for each triggered execution.
+                    The result of the evaluation will be
+                    passed as the payload of
+                    the Message that is sent to the MessageChannel.
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:attributeGroup>
+
+    <xsd:attributeGroup name="channelAdapterAttributes">
+        <xsd:attribute name="id" type="xsd:string"/>
+        <xsd:attribute name="channel" type="xsd:string">
+            <xsd:annotation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type type="org.springframework.messaging.MessageChannel"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+                <xsd:documentation>
+                    Identifies channel attached to this adapter. Depending on the type of the
+                    adapter
+                    this channel could be the receiving channel (e.g., outbound-channel-adapter) or
+                    channel where
+                    messages will be sent to by this adapter (e.g., inbound-channel-adapter).
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attributeGroup ref="smartLifeCycleAttributeGroup"/>
+    </xsd:attributeGroup>
+
+    <xsd:complexType name="transactionalType">
+        <xsd:attribute name="transaction-manager" type="xsd:string" default="transactionManager">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+	The bean name of the PlatformTransactionManager to use.
+				]]></xsd:documentation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type
+                                type="org.springframework.transaction.PlatformTransactionManager"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="propagation" default="REQUIRED">
+            <xsd:annotation>
+                <xsd:documentation
+                        source="java:org.springframework.transaction.annotation.Propagation">
+                    <![CDATA[
+	The transaction propagation behavior.
+				]]></xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:union memberTypes="propagationEnumeration xsd:string"/>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="isolation" default="DEFAULT">
+            <xsd:annotation>
+                <xsd:documentation
+                        source="java:org.springframework.transaction.annotation.Isolation"><![CDATA[
+	The transaction isolation level.
+				]]></xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:union memberTypes="isolationEnumeration xsd:string"/>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="timeout" type="xsd:string" default="-1">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+	The transaction timeout value (in seconds).
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="read-only" type="xsd:string" default="false">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+	Is this transaction read-only?
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="synchronization-factory" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+	Reference to an instance of org.springframework.integration.transaction.TransactionSynchronizationFactory
+	which will return an instance of org.springframework.transaction.support.TransactionSynchronization via its create(..) method.
+				]]></xsd:documentation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type
+                                type="org.springframework.integration.transaction.TransactionSynchronizationFactory"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="adviceChainType">
+        <xsd:sequence>
+            <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="ref" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:complexType>
+                        <xsd:attribute name="bean" type="xsd:string" use="required">
+                            <xsd:annotation>
+                                <xsd:appinfo>
+                                    <tool:annotation kind="ref">
+                                        <tool:expected-type type="java.lang.Object"/>
+                                    </tool:annotation>
+                                </xsd:appinfo>
+                            </xsd:annotation>
+                        </xsd:attribute>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:any namespace="##other" processContents="strict" minOccurs="0"
+                         maxOccurs="unbounded"/>
+            </xsd:choice>
+        </xsd:sequence>
+        <xsd:attribute name="synchronization-factory" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+	Reference to an instance of org.springframework.integration.transaction.TransactionSynchronizationFactory
+	which will return an instance of org.springframework.transaction.support.TransactionSynchronization via its create(..) method.
+	Setting of this attribute will only have an affect if a Transaction advice is present in the chain.
+				]]></xsd:documentation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type
+                                type="org.springframework.integration.transaction.TransactionSynchronizationFactory"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:simpleType name="timeUnitEnumeration">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="MILLISECONDS"/>
+            <xsd:enumeration value="SECONDS"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:attributeGroup name="smartLifeCycleAttributeGroup">
+        <xsd:attribute name="auto-startup">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+					Boolean value indicating whether this endpoint should start automatically.
+				]]></xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:union memberTypes="xsd:boolean xsd:string"/>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="phase" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+The lifecycle phase within which this endpoint should start and stop.
+The lower the value the earlier this endpoint will start and the later it will stop. The
+default is 0. Values can be negative. See SmartLifeCycle.
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="role" type="xsd:string">
+            <xsd:annotation>
+                <xsd:documentation><![CDATA[
+Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group.
+See 'SmartLifecycleRoleController'.
+				]]></xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:attributeGroup>
+
+    <xsd:simpleType name="propagationEnumeration">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="REQUIRED"/>
+            <xsd:enumeration value="SUPPORTS"/>
+            <xsd:enumeration value="MANDATORY"/>
+            <xsd:enumeration value="REQUIRES_NEW"/>
+            <xsd:enumeration value="NOT_SUPPORTED"/>
+            <xsd:enumeration value="NEVER"/>
+            <xsd:enumeration value="NESTED"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="isolationEnumeration">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="DEFAULT"/>
+            <xsd:enumeration value="READ_UNCOMMITTED"/>
+            <xsd:enumeration value="READ_COMMITTED"/>
+            <xsd:enumeration value="REPEATABLE_READ"/>
+            <xsd:enumeration value="SERIALIZABLE"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+</xsd:schema>

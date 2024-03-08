@@ -1,13 +1,14 @@
-package com.octo.keip.schema.eip.definitions;
+package com.octo.keip.schema.model.eip;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 public abstract class EipElement {
 
   protected final String name;
   protected final String description;
-  protected final List<Attribute> attributes;
+  protected final Set<Attribute> attributes;
   protected final ChildGroup childGroup;
 
   protected EipElement(Builder<?> builder) {
@@ -25,7 +26,7 @@ public abstract class EipElement {
     return description;
   }
 
-  public List<Attribute> getAttributeDefinitions() {
+  public Set<Attribute> getAttributeDefinitions() {
     return attributes;
   }
 
@@ -38,7 +39,7 @@ public abstract class EipElement {
 
     protected String name;
     protected String description;
-    protected List<Attribute> attributes;
+    protected Set<Attribute> attributes;
     protected ChildGroup childGroup;
 
     public T description(String description) {
@@ -46,14 +47,14 @@ public abstract class EipElement {
       return self();
     }
 
-    public T attributes(List<Attribute> attributes) {
+    public T attributes(Set<Attribute> attributes) {
       this.attributes = attributes;
       return self();
     }
 
     public T addAttribute(Attribute attribute) {
       if (this.attributes == null) {
-        this.attributes = new ArrayList<>();
+        this.attributes = new HashSet<>();
       }
       this.attributes.add(attribute);
       return self();
@@ -67,5 +68,20 @@ public abstract class EipElement {
     protected abstract EipElement build();
 
     protected abstract T self();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof EipElement that)) return false;
+    return Objects.equals(name, that.name)
+        && Objects.equals(description, that.description)
+        && Objects.equals(attributes, that.attributes)
+        && Objects.equals(childGroup, that.childGroup);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, description, attributes, childGroup);
   }
 }
