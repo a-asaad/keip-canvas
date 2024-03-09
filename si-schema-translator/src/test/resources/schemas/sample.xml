@@ -44,22 +44,17 @@
                 <xsd:element name="header" type="headerSubElementType" minOccurs="0"
                              maxOccurs="unbounded"/>
             </xsd:sequence>
-            <xsd:attributeGroup ref="methodInvokingOrExpressionEvaluatingAttributes"/>
             <xsd:attributeGroup ref="channelAdapterAttributes"/>
             <xsd:attribute name="send-timeout" type="xsd:string">
                 <xsd:annotation>
                     <xsd:documentation>
-                        Maximum amount of time in milliseconds to wait when sending a message to the
+                        Maximum amount of time to wait when sending a message to the
                         channel
-                        if such channel may block.
-                        For example, a Queue Channel can block until space is available if its
-                        maximum capacity
-                        has been reached.
                         Defaults to '-1' - blocking indefinitely.
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
-            <xsd:attribute name="test-union-enum">
+            <xsd:attribute name="timeout-unit">
                 <xsd:simpleType>
                     <xsd:union memberTypes="timeUnitEnumeration xsd:string"/>
                 </xsd:simpleType>
@@ -239,43 +234,6 @@
         </xsd:attribute>
     </xsd:complexType>
 
-    <xsd:attributeGroup name="methodInvokingOrExpressionEvaluatingAttributes">
-        <xsd:attribute name="ref" type="xsd:string">
-            <xsd:annotation>
-                <xsd:appinfo>
-                    <tool:annotation kind="ref">
-                        <tool:expected-type type="java.lang.Object"/>
-                    </tool:annotation>
-                </xsd:appinfo>
-                <xsd:documentation>
-                    A reference to a bean defined in the application context.
-                </xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="method" type="xsd:string">
-            <xsd:annotation>
-                <xsd:appinfo>
-                    <tool:annotation>
-                        <tool:expected-method type-ref="@ref"/>
-                    </tool:annotation>
-                </xsd:appinfo>
-                <xsd:documentation>
-                    A method defined on the bean referenced by 'ref' attribute
-                </xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="expression" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation>
-                    SpEL expression to be evaluated for each triggered execution.
-                    The result of the evaluation will be
-                    passed as the payload of
-                    the Message that is sent to the MessageChannel.
-                </xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-    </xsd:attributeGroup>
-
     <xsd:attributeGroup name="channelAdapterAttributes">
         <xsd:attribute name="id" type="xsd:string"/>
         <xsd:attribute name="channel" type="xsd:string">
@@ -418,15 +376,6 @@
             <xsd:simpleType>
                 <xsd:union memberTypes="xsd:boolean xsd:string"/>
             </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute name="phase" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-The lifecycle phase within which this endpoint should start and stop.
-The lower the value the earlier this endpoint will start and the later it will stop. The
-default is 0. Values can be negative. See SmartLifeCycle.
-				]]></xsd:documentation>
-            </xsd:annotation>
         </xsd:attribute>
         <xsd:attribute name="role" type="xsd:string">
             <xsd:annotation>

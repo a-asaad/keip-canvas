@@ -30,6 +30,8 @@ public class AttributeTypeTranslator implements AttributeTranslator<AttributeTyp
 
   @Override
   public AttributeType apply(XmlSchemaSimpleTypeUnion union) {
+    // TODO: Check all asserts
+    assert union.getBaseTypes().isEmpty();
     QName[] qNames = union.getMemberTypesQNames();
     for (var qName : qNames) {
       if (XSD_NAMESPACE.equals(qName.getNamespaceURI())) {

@@ -1,0 +1,48 @@
+{
+  "integration": [
+    {
+      "name": "inbound-channel-adapter",
+      "description": "Defines a Polling Channel Adapter",
+      "role": "endpoint",
+      "flowType": "source",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "channel",
+          "type": "string",
+          "description": "Identifies channel attached to this adapter. Depending on the type of the adapter this channel could be the receiving channel (e.g., outbound-channel-adapter) or channel where messages will be sent to by this adapter (e.g., inbound-channel-adapter)."
+        },
+        {
+          "name": "auto-startup",
+          "type": "boolean",
+          "description": "Boolean value indicating whether this endpoint should start automatically.",
+          "default": true
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "description": "Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group. See 'SmartLifecycleRoleController'."
+        },
+        {
+          "name": "send-timeout",
+          "type": "string",
+          "description": "Maximum amount of time to wait when sending a message to the channel Defaults to '-1' - blocking indefinitely."
+        },
+        {
+          "name": "timeout-unit",
+          "type": "string",
+          "description": "Maximum amount of time to wait when sending a message to the channel Defaults to '-1' - blocking indefinitely.",
+          "restriction": {
+            "enum": [
+              "MILLISECONDS",
+              "SECONDS"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

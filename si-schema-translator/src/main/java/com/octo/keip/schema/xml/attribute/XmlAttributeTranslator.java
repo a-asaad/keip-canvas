@@ -20,7 +20,6 @@ public class XmlAttributeTranslator {
   private static final Pattern whitespacePattern = Pattern.compile("\\s+");
 
   private final AttributeTypeTranslator typeTranslator;
-
   private final AttributeRestrictionTranslator restrictionTranslator;
 
   public XmlAttributeTranslator(XmlSchema xmlSchema) {

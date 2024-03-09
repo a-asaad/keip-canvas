@@ -1,5 +1,6 @@
 package com.octo.keip.schema.xml;
 
+import com.google.gson.GsonBuilder;
 import com.octo.keip.schema.model.eip.Attribute;
 import com.octo.keip.schema.model.eip.EipSchema;
 import com.octo.keip.schema.xml.attribute.XmlAttributeIterator;
@@ -46,6 +47,8 @@ public class SiSchemaTranslator {
     // XmlSchemaParticle -> element, group, or groupRef (ignore any)
     // element -> get info
     // group -> all, choice, or sequence (handle appropriately)
+    var gson = new GsonBuilder().setPrettyPrinting().create();
+    System.out.println(gson.toJson(eipAttributes));
     return new EipSchema();
   }
 }
