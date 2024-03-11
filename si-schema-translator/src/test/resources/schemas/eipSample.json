@@ -1,5 +1,5 @@
 {
-  "integration": [
+  "test-namespace": [
     {
       "name": "inbound-channel-adapter",
       "description": "Defines a Polling Channel Adapter",
@@ -8,7 +8,8 @@
       "attributes": [
         {
           "name": "id",
-          "type": "string"
+          "type": "string",
+          "required": true
         },
         {
           "name": "channel",
@@ -24,19 +25,21 @@
         {
           "name": "role",
           "type": "string",
-          "description": "Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group. See 'SmartLifecycleRoleController'."
+          "description": "Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group. See 'SmartLifecycleRoleController'.",
+          "default": "defaultRole"
         },
         {
           "name": "send-timeout",
-          "type": "string",
-          "description": "Maximum amount of time to wait when sending a message to the channel Defaults to '-1' - blocking indefinitely."
+          "type": "number",
+          "description": "Maximum amount of time to wait when sending a message to the channel Defaults to '-1' - blocking indefinitely.",
+          "default": -1
         },
         {
           "name": "timeout-unit",
           "type": "string",
-          "description": "Maximum amount of time to wait when sending a message to the channel Defaults to '-1' - blocking indefinitely.",
           "restriction": {
-            "enum": [
+            "type": "enum",
+            "values": [
               "MILLISECONDS",
               "SECONDS"
             ]

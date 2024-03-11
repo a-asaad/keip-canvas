@@ -3,6 +3,9 @@ package com.octo.keip.schema.xml.attribute;
 import static org.apache.ws.commons.schema.XmlSchemaSerializer.XSD_NAMESPACE;
 
 import com.octo.keip.schema.model.eip.Restriction;
+import com.octo.keip.schema.model.eip.Restriction.MultiValuedRestriction;
+import com.octo.keip.schema.model.eip.Restriction.RestrictionType;
+
 import java.util.List;
 import javax.xml.namespace.QName;
 import org.apache.ws.commons.schema.XmlSchema;
@@ -12,7 +15,7 @@ import org.apache.ws.commons.schema.XmlSchemaSimpleTypeList;
 import org.apache.ws.commons.schema.XmlSchemaSimpleTypeRestriction;
 import org.apache.ws.commons.schema.XmlSchemaSimpleTypeUnion;
 
-public class AttributeRestrictionTranslator implements AttributeTranslator<Restriction> {
+public class AttributeRestrictionTranslator implements AttributeTypeContentTranslator<Restriction> {
 
   private final XmlSchema xmlSchema;
 
@@ -35,7 +38,9 @@ public class AttributeRestrictionTranslator implements AttributeTranslator<Restr
             .map(facet -> facet.getValue().toString())
             .toList();
 
-    return enums.isEmpty() ? null : new Restriction.EnumRestriction(enums);
+    return enums.isEmpty()
+        ? null
+        : new MultiValuedRestriction(RestrictionType.ENUM, enums);
   }
 
   @Override

@@ -10,7 +10,7 @@ import org.apache.ws.commons.schema.XmlSchemaSimpleTypeList;
 import org.apache.ws.commons.schema.XmlSchemaSimpleTypeRestriction;
 import org.apache.ws.commons.schema.XmlSchemaSimpleTypeUnion;
 
-public class AttributeTypeTranslator implements AttributeTranslator<AttributeType> {
+public class AttributeTypeTranslator implements AttributeTypeContentTranslator<AttributeType> {
 
   private final XmlSchema xmlSchema;
 

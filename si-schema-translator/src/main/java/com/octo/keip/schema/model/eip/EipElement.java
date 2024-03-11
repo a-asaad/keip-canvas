@@ -1,7 +1,6 @@
 package com.octo.keip.schema.model.eip;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 public abstract class EipElement {
@@ -26,7 +25,7 @@ public abstract class EipElement {
     return description;
   }
 
-  public Set<Attribute> getAttributeDefinitions() {
+  public Set<Attribute> getAttributes() {
     return attributes;
   }
 
@@ -68,20 +67,5 @@ public abstract class EipElement {
     protected abstract EipElement build();
 
     protected abstract T self();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof EipElement that)) return false;
-    return Objects.equals(name, that.name)
-        && Objects.equals(description, that.description)
-        && Objects.equals(attributes, that.attributes)
-        && Objects.equals(childGroup, that.childGroup);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(name, description, attributes, childGroup);
   }
 }

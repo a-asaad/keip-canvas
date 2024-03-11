@@ -1,10 +1,12 @@
 package com.octo.keip.schema.model.eip;
 
+import com.google.gson.annotations.SerializedName;
+
 public record Attribute(
     String name,
     AttributeType type,
     String description,
-    Object defaultValue,
+    @SerializedName("default") String defaultValue,
     boolean required,
     Restriction restriction) {
 
@@ -22,7 +24,7 @@ public record Attribute(
     private final String name;
     private final AttributeType type;
     private String description;
-    private Object defaultValue;
+    private String defaultValue;
     private boolean required;
     private Restriction restriction;
 
@@ -40,7 +42,7 @@ public record Attribute(
       return this;
     }
 
-    public Builder defaultValue(Object defaultValue) {
+    public Builder defaultValue(String defaultValue) {
       this.defaultValue = defaultValue;
       return this;
     }

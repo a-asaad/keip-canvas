@@ -9,17 +9,7 @@
     <xsd:element name="inbound-channel-adapter">
         <xsd:annotation>
             <xsd:documentation>
-                Defines a Polling Channel Adapter for the
-                'org.springframework.integration.endpoint.MethodInvokingMessageSource',
-                or 'org.springframework.integration.endpoint.ExpressionEvaluatingMessageSource'
-                or 'org.springframework.integration.scripting.ScriptExecutingMessageSource'
-                that receives from a MessageSource and sends to a
-                MessageChannel.
-                Note, when using the 'expression' attribute, or 'expression' or 'script'
-                sub-element,
-                there is not yet a root Message object and therefore
-                the 'payload' and 'headers' properties are not available in the expression or
-                script.
+                Defines a Polling Channel Adapter
             </xsd:documentation>
         </xsd:annotation>
         <xsd:complexType>
@@ -45,7 +35,7 @@
                              maxOccurs="unbounded"/>
             </xsd:sequence>
             <xsd:attributeGroup ref="channelAdapterAttributes"/>
-            <xsd:attribute name="send-timeout" type="xsd:string">
+            <xsd:attribute name="send-timeout" type="xsd:integer" default="-1">
                 <xsd:annotation>
                     <xsd:documentation>
                         Maximum amount of time to wait when sending a message to the
@@ -235,7 +225,7 @@
     </xsd:complexType>
 
     <xsd:attributeGroup name="channelAdapterAttributes">
-        <xsd:attribute name="id" type="xsd:string"/>
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
         <xsd:attribute name="channel" type="xsd:string">
             <xsd:annotation>
                 <xsd:appinfo>
@@ -367,7 +357,7 @@
     </xsd:simpleType>
 
     <xsd:attributeGroup name="smartLifeCycleAttributeGroup">
-        <xsd:attribute name="auto-startup">
+        <xsd:attribute name="auto-startup" default="true">
             <xsd:annotation>
                 <xsd:documentation><![CDATA[
 					Boolean value indicating whether this endpoint should start automatically.
@@ -377,7 +367,7 @@
                 <xsd:union memberTypes="xsd:boolean xsd:string"/>
             </xsd:simpleType>
         </xsd:attribute>
-        <xsd:attribute name="role" type="xsd:string">
+        <xsd:attribute name="role" type="xsd:string" default="defaultRole">
             <xsd:annotation>
                 <xsd:documentation><![CDATA[
 Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group.

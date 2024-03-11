@@ -46,17 +46,4 @@ public final class EipComponent extends EipElement {
       return this;
     }
   }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof EipComponent that)) return false;
-    if (!super.equals(o)) return false;
-    return role == that.role && flowType == that.flowType;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), role, flowType);
-  }
 }

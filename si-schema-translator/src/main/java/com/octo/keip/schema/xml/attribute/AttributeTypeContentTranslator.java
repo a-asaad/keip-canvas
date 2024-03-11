@@ -7,7 +7,7 @@ import org.apache.ws.commons.schema.XmlSchemaSimpleTypeUnion;
 
 // TODO: Revisit. Kind of taking over from the JVM here, still preferred to XmlSchema wrappers at
 // the moment.
-public interface AttributeTranslator<T> {
+public interface AttributeTypeContentTranslator<T> {
 
   default T apply(XmlSchemaSimpleTypeContent content) {
     return switch (content) {

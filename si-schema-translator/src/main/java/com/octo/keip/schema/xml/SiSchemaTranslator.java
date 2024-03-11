@@ -1,20 +1,23 @@
 package com.octo.keip.schema.xml;
 
-import com.google.gson.GsonBuilder;
 import com.octo.keip.schema.model.eip.Attribute;
+import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipSchema;
+import com.octo.keip.schema.model.eip.FlowType;
+import com.octo.keip.schema.model.eip.Role;
+import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
 import com.octo.keip.schema.xml.attribute.XmlAttributeIterator;
 import com.octo.keip.schema.xml.attribute.XmlAttributeTranslator;
 import java.io.Reader;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.xml.namespace.QName;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaAttribute;
-import org.apache.ws.commons.schema.XmlSchemaAttributeOrGroupRef;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaElement;
+import org.apache.ws.commons.schema.XmlSchemaType;
 
 public class SiSchemaTranslator {
 
@@ -23,32 +26,50 @@ public class SiSchemaTranslator {
   public EipSchema apply(String namespace, Reader xmlReader) {
     var schemaCol = new XmlSchemaCollection();
     XmlSchema xmlSchema = schemaCol.read(xmlReader);
-    return translate(xmlSchema);
+    return translate(namespace, xmlSchema);
   }
 
-  private EipSchema translate(XmlSchema xmlSchema) {
-    XmlSchemaElement element =
-        xmlSchema.getElementByName(new QName(DEFAULT_NAMESPACE_URI, "inbound-channel-adapter"));
-    XmlSchemaComplexType adapterType = (XmlSchemaComplexType) element.getSchemaType();
+  private EipSchema translate(String namespace, XmlSchema xmlSchema) {
+    //    XmlSchemaElement element =
+    //        xmlSchema.getElementByName(new QName(DEFAULT_NAMESPACE_URI,
+    // "inbound-channel-adapter"));
+    //    XmlSchemaComplexType adapterType = (XmlSchemaComplexType) element.getSchemaType();
     // schemaType -> simple or complex
-    assert !adapterType.isMixed();
+    //    assert !adapterType.isMixed();
 
-    List<XmlSchemaAttributeOrGroupRef> attributes = adapterType.getAttributes();
+    //    List<XmlSchemaAttributeOrGroupRef> attributes = adapterType.getAttributes();
 
-    // attribute -> Attribute: get info
-    // attribute -> GroupRef: get info for each attribute in group from ref
     var iterator = new XmlAttributeIterator(xmlSchema);
-    Stream<XmlSchemaAttribute> attributeStream = iterator.visitXmlAttributes(adapterType);
-
     var translator = new XmlAttributeTranslator(xmlSchema);
-    List<Attribute> eipAttributes = attributeStream.map(translator::translate).toList();
+
+    var eipSchema = new EipSchema();
+
+    for (XmlSchemaElement element : xmlSchema.getElements().values()) {
+      XmlSchemaType schemaType = element.getSchemaType();
+      // TODO: Branch for simple vs. complex
+      assert schemaType instanceof XmlSchemaComplexType;
+
+      Stream<XmlSchemaAttribute> attributeStream =
+          iterator.visitXmlAttributes((XmlSchemaComplexType) schemaType);
+      Set<Attribute> eipAttributes =
+          attributeStream.map(translator::translate).collect(Collectors.toSet());
+
+      // TODO: Figure out how to get flowtype and role.
+      EipComponent.Builder componentBuilder =
+          new EipComponent.Builder(element.getName(), Role.ENDPOINT, FlowType.SOURCE)
+              .attributes(eipAttributes);
+
+      String description = AnnotationTranslator.getDescription(element.getAnnotation());
+      if (!description.isBlank()) {
+        componentBuilder.description(description);
+      }
+      eipSchema.addComponent(namespace, componentBuilder.build());
+    }
 
     // getParticle -> XmlSchemaParticle
     // XmlSchemaParticle -> element, group, or groupRef (ignore any)
     // element -> get info
     // group -> all, choice, or sequence (handle appropriately)
-    var gson = new GsonBuilder().setPrettyPrinting().create();
-    System.out.println(gson.toJson(eipAttributes));
-    return new EipSchema();
+    return eipSchema;
   }
 }

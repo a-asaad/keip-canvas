@@ -41,17 +41,4 @@ public final class EipChildElement extends EipElement {
       return this;
     }
   }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof EipChildElement that)) return false;
-    if (!super.equals(o)) return false;
-    return Objects.equals(occurrence, that.occurrence);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), occurrence);
-  }
 }
