@@ -33,20 +33,19 @@ public class SchemaToModelTest {
   private static final TypeToken<Map<String, List<EipComponent>>> eipSchemaMapType =
       new TypeToken<>() {};
 
-  private static Reader sampleXml;
+  private static Reader testXmlReader;
   private static EipSchema sampleEipSchema;
 
   @BeforeAll
   static void beforeAll() throws URISyntaxException, IOException {
-    sampleXml = getSchemaFileReader("sample.xml");
+    testXmlReader = getSchemaFileReader("sample.xml");
     sampleEipSchema = importEipSchema("eipSample.json");
   }
 
   @Test
   void fullyTranslateSchemaSuccess() {
-    Reader schemaReader = getSchemaFileReader("sample.xml");
     var translator = new SiSchemaTranslator();
-    EipSchema resultSchema = translator.apply("test-namespace", schemaReader);
+    EipSchema resultSchema = translator.apply("test-namespace", testXmlReader);
     assertSchemasEqual(sampleEipSchema, resultSchema);
   }
 

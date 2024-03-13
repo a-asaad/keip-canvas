@@ -46,6 +46,67 @@
           }
         }
       ]
+    },
+    {
+      "name": "sample-filter",
+      "role": "endpoint",
+      "flowType": "source",
+      "attributes": [
+        {
+          "name": "throw-exception-on-rejection",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "auto-startup",
+          "type": "boolean",
+          "description": "Boolean value indicating whether this endpoint should start automatically.",
+          "default": true
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "description": "Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group. See 'SmartLifecycleRoleController'.",
+          "default": "defaultRole"
+        },
+        {
+          "name": "expression",
+          "type": "string"
+        },
+        {
+          "name": "output-channel",
+          "type": "string",
+          "description": "Message sent here"
+        },
+        {
+          "name": "input-channel",
+          "type": "string",
+          "description": "The message receiving channel"
+        },
+        {
+          "name": "handler-spec",
+          "type": "string",
+          "restriction": {
+            "type": "enum",
+            "values": [
+              "PRODUCER",
+              "CONSUMER"
+            ]
+          }
+        },
+        {
+          "name": "handler-spec-extension",
+          "type": "string",
+          "restriction": {
+            "type": "enum",
+            "values": [
+              "PRODUCER",
+              "CONSUMER",
+              "NONE"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

@@ -30,15 +30,8 @@ public class SiSchemaTranslator {
   }
 
   private EipSchema translate(String namespace, XmlSchema xmlSchema) {
-    //    XmlSchemaElement element =
-    //        xmlSchema.getElementByName(new QName(DEFAULT_NAMESPACE_URI,
-    // "inbound-channel-adapter"));
-    //    XmlSchemaComplexType adapterType = (XmlSchemaComplexType) element.getSchemaType();
-    // schemaType -> simple or complex
-    //    assert !adapterType.isMixed();
-
-    //    List<XmlSchemaAttributeOrGroupRef> attributes = adapterType.getAttributes();
-
+    // TODO: Should iterator and translator be combined? Or have the translator depend on the
+    // iterator?
     var iterator = new XmlAttributeIterator(xmlSchema);
     var translator = new XmlAttributeTranslator(xmlSchema);
 
@@ -47,10 +40,13 @@ public class SiSchemaTranslator {
     for (XmlSchemaElement element : xmlSchema.getElements().values()) {
       XmlSchemaType schemaType = element.getSchemaType();
       // TODO: Branch for simple vs. complex
-      assert schemaType instanceof XmlSchemaComplexType;
+      if (!(schemaType instanceof XmlSchemaComplexType schemaComplexType)) {
+        throw new IllegalStateException("SimpleTypes not supported yet");
+      }
 
-      Stream<XmlSchemaAttribute> attributeStream =
-          iterator.visitXmlAttributes((XmlSchemaComplexType) schemaType);
+      assert !schemaType.isMixed();
+
+      Stream<XmlSchemaAttribute> attributeStream = iterator.streamAttributes(schemaComplexType);
       Set<Attribute> eipAttributes =
           attributeStream.map(translator::translate).collect(Collectors.toSet());
 
@@ -67,9 +63,12 @@ public class SiSchemaTranslator {
     }
 
     // getParticle -> XmlSchemaParticle
-    // XmlSchemaParticle -> element, group, or groupRef (ignore any)
+    // getParticle or getContentTypeParticle?
+    // XmlSchemaParticle -> element, group, or groupRef (ignore any?)
+    // getContentModel -> 4 types (simple/complex x extension/restriction)
     // element -> get info
     // group -> all, choice, or sequence (handle appropriately)
+    // xsd:any (namespace="##other"), most likely refer to beans.
     return eipSchema;
   }
 }

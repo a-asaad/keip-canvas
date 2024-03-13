@@ -32,7 +32,9 @@ public class AttributeTypeTranslator implements AttributeTypeContentTranslator<A
   public AttributeType apply(XmlSchemaSimpleTypeUnion union) {
     // TODO: Check all asserts
     assert union.getBaseTypes().isEmpty();
+
     QName[] qNames = union.getMemberTypesQNames();
+    // TODO: Do you still want to take the first available union type?
     for (var qName : qNames) {
       if (XSD_NAMESPACE.equals(qName.getNamespaceURI())) {
         return AttributeType.of(qName.getLocalPart());

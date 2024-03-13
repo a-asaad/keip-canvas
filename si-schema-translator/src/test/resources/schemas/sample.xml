@@ -52,6 +52,126 @@
         </xsd:complexType>
     </xsd:element>
 
+    <xsd:element name="sample-filter">
+        <xsd:annotation></xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="sample-filter-type">
+                    <xsd:attributeGroup ref="inputOutputChannelGroup"/>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:attributeGroup name="inputOutputChannelGroup">
+        <xsd:attribute name="output-channel" type="xsd:string">
+            <xsd:annotation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type type="org.springframework.messaging.MessageChannel"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+                <xsd:documentation>
+                    Message sent here
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="input-channel" type="xsd:string">
+            <xsd:annotation>
+                <xsd:appinfo>
+                    <tool:annotation kind="ref">
+                        <tool:expected-type type="org.springframework.messaging.MessageChannel"/>
+                    </tool:annotation>
+                </xsd:appinfo>
+                <xsd:documentation>
+                    The message receiving channel
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attributeGroup ref="smartLifeCycleAttributeGroup"/>
+    </xsd:attributeGroup>
+
+    <xsd:complexType name="sample-filter-type">
+        <xsd:complexContent>
+            <xsd:extension base="expressionOrAdvice">
+                <xsd:sequence>
+                    <xsd:element name="transactional" type="transactionalType" minOccurs="0"
+                                 maxOccurs="1"/>
+                    <xsd:element name="advice-chain" minOccurs="0" maxOccurs="1">
+                        <xsd:complexType>
+                            <xsd:complexContent>
+                                <xsd:extension base="handlerAdviceChainType">
+                                    <xsd:attribute name="discard-within-advice" type="xsd:string"
+                                                   default="true">
+                                    </xsd:attribute>
+                                </xsd:extension>
+                            </xsd:complexContent>
+                        </xsd:complexType>
+                    </xsd:element>
+                </xsd:sequence>
+                <xsd:attribute name="throw-exception-on-rejection" default="false">
+                    <xsd:simpleType>
+                        <xsd:union memberTypes="xsd:boolean xsd:string"/>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="handlerAdviceChainType">
+        <xsd:sequence>
+            <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="ref" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:complexType>
+                        <xsd:attribute name="bean" type="xsd:string" use="required">
+                            <xsd:annotation>
+                                <xsd:appinfo>
+                                    <tool:annotation kind="ref">
+                                        <tool:expected-type type="java.lang.Object"/>
+                                    </tool:annotation>
+                                </xsd:appinfo>
+                            </xsd:annotation>
+                        </xsd:attribute>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:any namespace="##other" processContents="strict" minOccurs="0"
+                         maxOccurs="unbounded"/>
+                <xsd:element name="retry-advice" type="retryAdviceType"/>
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="expressionOrAdvice">
+        <xsd:complexContent>
+            <xsd:extension base="handlerEndpointType">
+                <xsd:choice minOccurs="0" maxOccurs="2">
+                    <xsd:element name="poller" type="basePollerType" minOccurs="0" maxOccurs="1"/>
+                    <xsd:element name="expression" type="innerExpressionType" minOccurs="0"
+                                 maxOccurs="1"/>
+                    <xsd:any namespace="##other" processContents="strict" minOccurs="0"
+                             maxOccurs="1"/>
+                </xsd:choice>
+                <xsd:attribute name="expression" type="xsd:string"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="handlerEndpointType">
+        <xsd:attribute name="handler-spec" type="handlerEndpointEnumeration"/>
+        <xsd:attribute name="handler-spec-extension">
+            <xsd:simpleType>
+                <xsd:restriction base="handlerEndpointEnumeration">
+                    <xsd:enumeration value="NONE"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="retryAdviceType">
+        <xsd:attribute name="max-attempts" type="xsd:string">
+        </xsd:attribute>
+    </xsd:complexType>
+
     <xsd:complexType name="basePollerType">
         <xsd:annotation>
             <xsd:documentation>
@@ -271,45 +391,6 @@
                 <xsd:union memberTypes="propagationEnumeration xsd:string"/>
             </xsd:simpleType>
         </xsd:attribute>
-        <xsd:attribute name="isolation" default="DEFAULT">
-            <xsd:annotation>
-                <xsd:documentation
-                        source="java:org.springframework.transaction.annotation.Isolation"><![CDATA[
-	The transaction isolation level.
-				]]></xsd:documentation>
-            </xsd:annotation>
-            <xsd:simpleType>
-                <xsd:union memberTypes="isolationEnumeration xsd:string"/>
-            </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute name="timeout" type="xsd:string" default="-1">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-	The transaction timeout value (in seconds).
-				]]></xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="read-only" type="xsd:string" default="false">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-	Is this transaction read-only?
-				]]></xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="synchronization-factory" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-	Reference to an instance of org.springframework.integration.transaction.TransactionSynchronizationFactory
-	which will return an instance of org.springframework.transaction.support.TransactionSynchronization via its create(..) method.
-				]]></xsd:documentation>
-                <xsd:appinfo>
-                    <tool:annotation kind="ref">
-                        <tool:expected-type
-                                type="org.springframework.integration.transaction.TransactionSynchronizationFactory"/>
-                    </tool:annotation>
-                </xsd:appinfo>
-            </xsd:annotation>
-        </xsd:attribute>
     </xsd:complexType>
 
     <xsd:complexType name="adviceChainType">
@@ -389,13 +470,10 @@ See 'SmartLifecycleRoleController'.
         </xsd:restriction>
     </xsd:simpleType>
 
-    <xsd:simpleType name="isolationEnumeration">
+    <xsd:simpleType name="handlerEndpointEnumeration">
         <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="DEFAULT"/>
-            <xsd:enumeration value="READ_UNCOMMITTED"/>
-            <xsd:enumeration value="READ_COMMITTED"/>
-            <xsd:enumeration value="REPEATABLE_READ"/>
-            <xsd:enumeration value="SERIALIZABLE"/>
+            <xsd:enumeration value="PRODUCER"/>
+            <xsd:enumeration value="CONSUMER"/>
         </xsd:restriction>
     </xsd:simpleType>
 
