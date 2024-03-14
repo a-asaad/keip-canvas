@@ -160,8 +160,10 @@
         <xsd:attribute name="handler-spec" type="handlerEndpointEnumeration"/>
         <xsd:attribute name="handler-spec-extension">
             <xsd:simpleType>
+                <!-- Warning: Extending restrictions with bases are not supported currently -->
+                <!-- This attribute will have a single enum only, ignoring the ones defined in base -->
                 <xsd:restriction base="handlerEndpointEnumeration">
-                    <xsd:enumeration value="NONE"/>
+                    <xsd:enumeration value="SINGLE"/>
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>

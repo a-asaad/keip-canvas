@@ -1,33 +1,29 @@
 package com.octo.keip.schema.xml.attribute;
 
-import static org.apache.ws.commons.schema.XmlSchemaSerializer.XSD_NAMESPACE;
-
 import com.octo.keip.schema.model.eip.Attribute;
 import com.octo.keip.schema.model.eip.AttributeType;
 import com.octo.keip.schema.model.eip.Restriction;
-import org.apache.ws.commons.schema.XmlSchema;
+import java.util.Collections;
+import java.util.List;
 import org.apache.ws.commons.schema.XmlSchemaAttribute;
-import org.apache.ws.commons.schema.XmlSchemaSimpleType;
 import org.apache.ws.commons.schema.XmlSchemaUse;
+import org.apache.ws.commons.schema.walker.XmlSchemaAttrInfo;
+import org.apache.ws.commons.schema.walker.XmlSchemaBaseSimpleType;
+import org.apache.ws.commons.schema.walker.XmlSchemaRestriction;
+import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
 
 public class XmlAttributeTranslator {
 
-  private final XmlSchema xmlSchema;
-  private final AttributeTypeTranslator typeTranslator;
-  private final AttributeRestrictionTranslator restrictionTranslator;
+  public Attribute translate(XmlSchemaAttrInfo attrInfo) {
+    XmlSchemaAttribute attribute = attrInfo.getAttribute();
+    XmlSchemaTypeInfo typeInfo = attrInfo.getType();
 
-  public XmlAttributeTranslator(XmlSchema xmlSchema) {
-    this.xmlSchema = xmlSchema;
-    this.typeTranslator = new AttributeTypeTranslator(xmlSchema);
-    this.restrictionTranslator = new AttributeRestrictionTranslator(xmlSchema);
-  }
-
-  public Attribute translate(XmlSchemaAttribute attribute) {
     // TODO: review asserts
     assert !XmlSchemaUse.PROHIBITED.equals(attribute.getUse());
+    assert !typeInfo.isMixed();
 
     Attribute.Builder builder =
-        new Attribute.Builder(attribute.getName(), getType(attribute))
+        new Attribute.Builder(attribute.getName(), getType(typeInfo))
             .defaultValue(attribute.getDefaultValue());
 
     if (XmlSchemaUse.REQUIRED.equals(attribute.getUse())) {
@@ -39,7 +35,7 @@ public class XmlAttributeTranslator {
       builder.description(description);
     }
 
-    Restriction restriction = getRestriction(attribute);
+    Restriction restriction = getRestriction(typeInfo);
     if (restriction != null) {
       builder.restriction(restriction);
     }
@@ -47,24 +43,67 @@ public class XmlAttributeTranslator {
     return builder.build();
   }
 
-  private AttributeType getType(XmlSchemaAttribute attribute) {
-    if (attribute.getSchemaType() != null) {
-      return this.typeTranslator.apply(attribute.getSchemaType().getContent());
-    }
-    return AttributeType.of(attribute.getSchemaTypeName().getLocalPart().toUpperCase());
+  private AttributeType getType(XmlSchemaTypeInfo typeInfo) {
+    return switch (typeInfo.getType()) {
+      case LIST -> throw new IllegalStateException("TODO: Figure out how to handle list types");
+      case UNION -> resolveUnionType(typeInfo);
+      case ATOMIC -> toAttributeType(typeInfo.getBaseType());
+      case COMPLEX ->
+          throw new IllegalStateException("TODO: Is it even possible to have complex attr types?");
+    };
   }
 
-  private Restriction getRestriction(XmlSchemaAttribute attribute) {
-    if (attribute.getSchemaType() != null) {
-      return this.restrictionTranslator.apply(attribute.getSchemaType().getContent());
-    } else if (attribute.getSchemaTypeName() != null
-        && !XSD_NAMESPACE.equals(attribute.getSchemaTypeName().getNamespaceURI())) {
-      // TODO: Is the case safe?
-      // TODO: Can this type lookup logic be extracted?
-      XmlSchemaSimpleType schemaType =
-          (XmlSchemaSimpleType) this.xmlSchema.getTypeByName(attribute.getSchemaTypeName());
-      return this.restrictionTranslator.apply(schemaType.getContent());
+  private AttributeType toAttributeType(XmlSchemaBaseSimpleType simpleType) {
+    return switch (simpleType) {
+      case BOOLEAN -> AttributeType.BOOLEAN;
+      case DECIMAL, DOUBLE, FLOAT -> AttributeType.NUMBER;
+      default -> AttributeType.STRING;
+    };
+  }
+
+  private AttributeType resolveUnionType(XmlSchemaTypeInfo typeInfo) {
+    assert typeInfo.getType().equals(XmlSchemaTypeInfo.Type.UNION);
+    // Take the first type
+    for (XmlSchemaTypeInfo childType : typeInfo.getChildTypes()) {
+      if (childType.getBaseType() != null) {
+        return toAttributeType(childType.getBaseType());
+      }
     }
+    return AttributeType.STRING;
+  }
+
+  private Restriction getRestriction(XmlSchemaTypeInfo typeInfo) {
+    List<String> enumRestrictions = getEnumRestrictions(typeInfo);
+    if (!enumRestrictions.isEmpty()) {
+      return new Restriction.MultiValuedRestriction(
+          Restriction.RestrictionType.ENUM, enumRestrictions);
+    }
+
+    if (typeInfo.getChildTypes() != null) {
+      // Take the first restriction
+      for (XmlSchemaTypeInfo childType : typeInfo.getChildTypes()) {
+        Restriction restriction = getRestriction(childType);
+        if (restriction != null) {
+          return restriction;
+        }
+      }
+    }
+
     return null;
+  }
+
+  private List<String> getEnumRestrictions(XmlSchemaTypeInfo typeInfo) {
+    if (typeInfo.getFacets() == null) {
+      return Collections.emptyList();
+    }
+
+    List<XmlSchemaRestriction> restrictions =
+        typeInfo.getFacets().get(XmlSchemaRestriction.Type.ENUMERATION);
+
+    if (restrictions == null) {
+      return Collections.emptyList();
+    }
+
+    return restrictions.stream().map(restriction -> restriction.getValue().toString()).toList();
   }
 }

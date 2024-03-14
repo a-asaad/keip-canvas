@@ -100,9 +100,7 @@
           "restriction": {
             "type": "enum",
             "values": [
-              "PRODUCER",
-              "CONSUMER",
-              "NONE"
+              "SINGLE"
             ]
           }
         }

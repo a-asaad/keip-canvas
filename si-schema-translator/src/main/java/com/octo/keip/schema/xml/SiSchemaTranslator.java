@@ -6,18 +6,12 @@ import com.octo.keip.schema.model.eip.EipSchema;
 import com.octo.keip.schema.model.eip.FlowType;
 import com.octo.keip.schema.model.eip.Role;
 import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
-import com.octo.keip.schema.xml.attribute.XmlAttributeIterator;
-import com.octo.keip.schema.xml.attribute.XmlAttributeTranslator;
 import java.io.Reader;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.ws.commons.schema.XmlSchema;
-import org.apache.ws.commons.schema.XmlSchemaAttribute;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
-import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaElement;
-import org.apache.ws.commons.schema.XmlSchemaType;
+import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
 
 public class SiSchemaTranslator {
 
@@ -26,31 +20,25 @@ public class SiSchemaTranslator {
   public EipSchema apply(String namespace, Reader xmlReader) {
     var schemaCol = new XmlSchemaCollection();
     XmlSchema xmlSchema = schemaCol.read(xmlReader);
-    return translate(namespace, xmlSchema);
+    var schemaWalker = new XmlSchemaWalker(schemaCol);
+    return translate(namespace, xmlSchema, schemaWalker);
   }
 
-  private EipSchema translate(String namespace, XmlSchema xmlSchema) {
-    // TODO: Should iterator and translator be combined? Or have the translator depend on the
-    // iterator?
-    var iterator = new XmlAttributeIterator(xmlSchema);
-    var translator = new XmlAttributeTranslator(xmlSchema);
-
+  private EipSchema translate(String namespace, XmlSchema xmlSchema, XmlSchemaWalker schemaWalker) {
     var eipSchema = new EipSchema();
 
     for (XmlSchemaElement element : xmlSchema.getElements().values()) {
-      XmlSchemaType schemaType = element.getSchemaType();
-      // TODO: Branch for simple vs. complex
-      if (!(schemaType instanceof XmlSchemaComplexType schemaComplexType)) {
-        throw new IllegalStateException("SimpleTypes not supported yet");
-      }
 
-      assert !schemaType.isMixed();
+      // TODO: Should visitor be reset instead of created everytime?
+      var eipVisitor = new EipTranslationVisitor();
+      schemaWalker.addVisitor(eipVisitor);
+      schemaWalker.walk(element);
+      schemaWalker.removeVisitor(eipVisitor);
 
-      Stream<XmlSchemaAttribute> attributeStream = iterator.streamAttributes(schemaComplexType);
-      Set<Attribute> eipAttributes =
-          attributeStream.map(translator::translate).collect(Collectors.toSet());
+      Set<Attribute> eipAttributes = eipVisitor.getAttributes();
 
       // TODO: Figure out how to get flowtype and role.
+      // TODO: Extract
       EipComponent.Builder componentBuilder =
           new EipComponent.Builder(element.getName(), Role.ENDPOINT, FlowType.SOURCE)
               .attributes(eipAttributes);

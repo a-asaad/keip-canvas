@@ -10,12 +10,4 @@ public enum AttributeType {
   BOOLEAN,
   @SerializedName("number")
   NUMBER;
-
-  public static AttributeType of(String typeStr) {
-    return switch (typeStr.toLowerCase()) {
-      case "boolean" -> BOOLEAN;
-      case "integer", "decimal", "float", "double" -> NUMBER;
-      default -> STRING;
-    };
-  }
 }
