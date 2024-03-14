@@ -1,9 +1,11 @@
 package com.octo.keip.schema.xml;
 
-import com.octo.keip.schema.model.eip.Attribute;
+import com.octo.keip.schema.model.eip.EipComponent;
+import com.octo.keip.schema.model.eip.FlowType;
+import com.octo.keip.schema.model.eip.Role;
 import com.octo.keip.schema.xml.attribute.XmlAttributeTranslator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.ws.commons.schema.XmlSchemaAll;
 import org.apache.ws.commons.schema.XmlSchemaAny;
 import org.apache.ws.commons.schema.XmlSchemaAnyAttribute;
@@ -17,27 +19,41 @@ import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
 public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   private final XmlAttributeTranslator attributeTranslator;
-  private final Set<Attribute> attributes;
+
+  private EipComponent.Builder eipComponentBuilder;
+
+  private ChildComposite currElement;
 
   public EipTranslationVisitor() {
     this.attributeTranslator = new XmlAttributeTranslator();
-    this.attributes = new HashSet<>();
   }
 
-  public Set<Attribute> getAttributes() {
-    return attributes;
+  public EipComponent getEipComponent() {
+    return eipComponentBuilder.build();
   }
 
   @Override
   public void onEnterElement(
       XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
-    int i = 5;
+    if (xmlSchemaElement.isTopLevel()) {
+      assert eipComponentBuilder == null;
+      currElement = new ChildComposite.Element(xmlSchemaElement.getName(), null);
+      // TODO: Figure out how to get flowtype and role.
+      eipComponentBuilder =
+          new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE);
+      return;
+    }
+    var element = new ChildComposite.Element(xmlSchemaElement.getName(), currElement);
+    currElement.addChild(element);
+    currElement = element;
   }
 
   @Override
   public void onExitElement(
       XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
-    int i = 5;
+    if (!xmlSchemaElement.isTopLevel()) {
+      exitNode();
+    }
   }
 
   @Override
@@ -46,8 +62,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
     if (!xmlSchemaElement.isTopLevel()) {
       return;
     }
-    var name = xmlSchemaAttrInfo.getAttribute().getName();
-    attributes.add(this.attributeTranslator.translate(xmlSchemaAttrInfo));
+    eipComponentBuilder.addAttribute(attributeTranslator.translate(xmlSchemaAttrInfo));
   }
 
   @Override
@@ -68,36 +83,37 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onEnterAllGroup(XmlSchemaAll xmlSchemaAll) {
-    int i = 5;
+    enterGroup("all");
   }
 
   @Override
   public void onExitAllGroup(XmlSchemaAll xmlSchemaAll) {
-    int i = 5;
+    exitNode();
   }
 
   @Override
   public void onEnterChoiceGroup(XmlSchemaChoice xmlSchemaChoice) {
-    int i = 5;
+    enterGroup("choice");
   }
 
   @Override
   public void onExitChoiceGroup(XmlSchemaChoice xmlSchemaChoice) {
-    int i = 5;
+    exitNode();
   }
 
   @Override
   public void onEnterSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-    int i = 5;
+    enterGroup("sequence");
   }
 
   @Override
   public void onExitSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-    int i = 5;
+    exitNode();
   }
 
   @Override
   public void onVisitAny(XmlSchemaAny xmlSchemaAny) {
+    // TODO: Might need to parse this for arbitrary beans.
     int i = 5;
   }
 
@@ -105,5 +121,40 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   public void onVisitAnyAttribute(
       XmlSchemaElement xmlSchemaElement, XmlSchemaAnyAttribute xmlSchemaAnyAttribute) {
     int i = 5;
+  }
+
+  private void enterGroup(String name) {
+    var element = new ChildComposite.Group(name, currElement);
+    currElement.addChild(element);
+    currElement = element;
+  }
+
+  private void exitNode() {
+    currElement = currElement.parent();
+  }
+
+  private sealed interface ChildComposite {
+
+    List<ChildComposite> children();
+
+    ChildComposite parent();
+
+    default void addChild(ChildComposite child) {
+      children().add(child);
+    }
+
+    record Element(String name, ChildComposite parent, List<ChildComposite> children)
+        implements ChildComposite {
+      public Element(String name, ChildComposite parent) {
+        this(name, parent, new ArrayList<>());
+      }
+    }
+
+    record Group(String name, ChildComposite parent, List<ChildComposite> children)
+        implements ChildComposite {
+      public Group(String name, ChildComposite parent) {
+        this(name, parent, new ArrayList<>());
+      }
+    }
   }
 }

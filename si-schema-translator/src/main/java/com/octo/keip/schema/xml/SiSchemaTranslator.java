@@ -35,19 +35,19 @@ public class SiSchemaTranslator {
       schemaWalker.walk(element);
       schemaWalker.removeVisitor(eipVisitor);
 
-      Set<Attribute> eipAttributes = eipVisitor.getAttributes();
+      EipComponent eipComponent = eipVisitor.getEipComponent();
 
       // TODO: Figure out how to get flowtype and role.
       // TODO: Extract
-      EipComponent.Builder componentBuilder =
-          new EipComponent.Builder(element.getName(), Role.ENDPOINT, FlowType.SOURCE)
-              .attributes(eipAttributes);
+//      EipComponent.Builder componentBuilder =
+//          new EipComponent.Builder(element.getName(), Role.ENDPOINT, FlowType.SOURCE)
+//              .attributes(eipAttributes);
 
-      String description = AnnotationTranslator.getDescription(element.getAnnotation());
-      if (!description.isBlank()) {
-        componentBuilder.description(description);
-      }
-      eipSchema.addComponent(namespace, componentBuilder.build());
+//      String description = AnnotationTranslator.getDescription(element.getAnnotation());
+//      if (!description.isBlank()) {
+//        componentBuilder.description(description);
+//      }
+      eipSchema.addComponent(namespace, eipComponent);
     }
 
     // getParticle -> XmlSchemaParticle
