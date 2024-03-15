@@ -2,7 +2,7 @@ package com.octo.keip.schema.model.eip;
 
 import java.util.Objects;
 
-public final class EipChildElement extends EipElement {
+public final class EipChildElement extends EipElement implements ChildComposite {
 
   private final Occurrence occurrence;
 
@@ -11,7 +11,13 @@ public final class EipChildElement extends EipElement {
     this.occurrence = builder.occurrence;
   }
 
-  public Occurrence getOccurrence() {
+  @Override
+  public void addChild(ChildComposite child) {
+    // TODO: Not great to have to cast here. Rethink.
+    this.setChildGroup((ChildGroup) child);
+  }
+
+  public Occurrence occurrence() {
     return occurrence;
   }
 

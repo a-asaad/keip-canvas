@@ -1,11 +1,17 @@
 package com.octo.keip.schema.model.eip;
 
+import java.util.ArrayList;
 import java.util.List;
 
-// TODO: Explain how to this does not map one-to-one with XML Schema child group indicators.
-public record ChildGroup(
-    Indicator indicator, List<EipChildElement> elements, Occurrence occurrence) {
-  public ChildGroup(Indicator indicator, List<EipChildElement> elements) {
-    this(indicator, elements, null);
+// TODO: Explain how this does not map one-to-one with XML Schema child group indicators.
+public record ChildGroup(Indicator indicator, Occurrence occurrence, List<ChildComposite> children)
+    implements ChildComposite {
+  public ChildGroup(Indicator indicator, Occurrence occurrence) {
+    this(indicator, occurrence, new ArrayList<>());
+  }
+
+  @Override
+  public void addChild(ChildComposite child) {
+    children.add(child);
   }
 }

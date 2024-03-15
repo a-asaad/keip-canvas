@@ -1,13 +1,9 @@
 package com.octo.keip.schema.xml;
 
-import com.octo.keip.schema.model.eip.Attribute;
 import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipSchema;
-import com.octo.keip.schema.model.eip.FlowType;
-import com.octo.keip.schema.model.eip.Role;
 import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
 import java.io.Reader;
-import java.util.Set;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
@@ -20,34 +16,40 @@ public class SiSchemaTranslator {
   public EipSchema apply(String namespace, Reader xmlReader) {
     var schemaCol = new XmlSchemaCollection();
     XmlSchema xmlSchema = schemaCol.read(xmlReader);
-    var schemaWalker = new XmlSchemaWalker(schemaCol);
-    return translate(namespace, xmlSchema, schemaWalker);
+    return translate(namespace, schemaCol, xmlSchema);
   }
 
-  private EipSchema translate(String namespace, XmlSchema xmlSchema, XmlSchemaWalker schemaWalker) {
+  private EipSchema translate(
+      String namespace, XmlSchemaCollection schemaCol, XmlSchema xmlSchema) {
     var eipSchema = new EipSchema();
+
+    var eipVisitor = new EipTranslationVisitor();
+    var schemaWalker = new XmlSchemaWalker(schemaCol);
+    schemaWalker.addVisitor(eipVisitor);
 
     for (XmlSchemaElement element : xmlSchema.getElements().values()) {
 
       // TODO: Should visitor be reset instead of created everytime?
-      var eipVisitor = new EipTranslationVisitor();
-      schemaWalker.addVisitor(eipVisitor);
+      // TODO: Should walker be cleared?
+      eipVisitor.reset();
       schemaWalker.walk(element);
-      schemaWalker.removeVisitor(eipVisitor);
 
-      EipComponent eipComponent = eipVisitor.getEipComponent();
+      EipComponent.Builder eipComponentBuilder = eipVisitor.getEipComponent();
+
+      System.out.println(element.getName());
+      EipTranslationVisitor.printTree(eipComponentBuilder.build().getChildGroup(), "");
 
       // TODO: Figure out how to get flowtype and role.
       // TODO: Extract
-//      EipComponent.Builder componentBuilder =
-//          new EipComponent.Builder(element.getName(), Role.ENDPOINT, FlowType.SOURCE)
-//              .attributes(eipAttributes);
+      //      EipComponent.Builder componentBuilder =
+      //          new EipComponent.Builder(element.getName(), Role.ENDPOINT, FlowType.SOURCE)
+      //              .attributes(eipAttributes);
 
-//      String description = AnnotationTranslator.getDescription(element.getAnnotation());
-//      if (!description.isBlank()) {
-//        componentBuilder.description(description);
-//      }
-      eipSchema.addComponent(namespace, eipComponent);
+      String description = AnnotationTranslator.getDescription(element.getAnnotation());
+      if (!description.isBlank()) {
+        eipComponentBuilder.description(description);
+      }
+      eipSchema.addComponent(namespace, eipComponentBuilder.build());
     }
 
     // getParticle -> XmlSchemaParticle

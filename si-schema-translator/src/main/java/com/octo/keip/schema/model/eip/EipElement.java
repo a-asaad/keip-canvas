@@ -8,7 +8,7 @@ public abstract class EipElement {
   protected final String name;
   protected final String description;
   protected final Set<Attribute> attributes;
-  protected final ChildGroup childGroup;
+  protected ChildGroup childGroup;
 
   protected EipElement(Builder<?> builder) {
     this.name = builder.name;
@@ -31,6 +31,10 @@ public abstract class EipElement {
 
   public ChildGroup getChildGroup() {
     return childGroup;
+  }
+
+  public void setChildGroup(ChildGroup childGroup) {
+    this.childGroup = childGroup;
   }
 
   // Effective Java - Hierarchical builder pattern
