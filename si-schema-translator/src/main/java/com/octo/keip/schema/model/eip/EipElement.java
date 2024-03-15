@@ -7,7 +7,7 @@ public abstract class EipElement {
 
   protected final String name;
   protected final String description;
-  protected final Set<Attribute> attributes;
+  protected Set<Attribute> attributes;
   protected ChildGroup childGroup;
 
   protected EipElement(Builder<?> builder) {
@@ -33,8 +33,16 @@ public abstract class EipElement {
     return childGroup;
   }
 
+  // TODO: Should we preserve immutability? (Also applies somewhat to addAttribute)
   public void setChildGroup(ChildGroup childGroup) {
     this.childGroup = childGroup;
+  }
+
+  public void addAttribute(Attribute attribute) {
+    if (this.attributes == null) {
+      this.attributes = new HashSet<>();
+    }
+    this.attributes.add(attribute);
   }
 
   // Effective Java - Hierarchical builder pattern

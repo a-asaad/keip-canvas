@@ -1,5 +1,6 @@
 package com.octo.keip.schema.xml;
 
+import com.octo.keip.schema.model.eip.Attribute;
 import com.octo.keip.schema.model.eip.ChildComposite;
 import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipChildElement;
@@ -20,11 +21,13 @@ import org.apache.ws.commons.schema.XmlSchemaAnyAttribute;
 import org.apache.ws.commons.schema.XmlSchemaChoice;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaGroupParticle;
+import org.apache.ws.commons.schema.XmlSchemaParticle;
 import org.apache.ws.commons.schema.XmlSchemaSequence;
 import org.apache.ws.commons.schema.walker.XmlSchemaAttrInfo;
 import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
 import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
 
+// TODO: Refactor
 public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   private final XmlAttributeTranslator attributeTranslator;
@@ -54,7 +57,8 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   public void onEnterElement(
       XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean visited) {
     if (xmlSchemaElement.isTopLevel()) {
-      assert eipComponentBuilder == null: "The top level element should only be entered once. Was the visitor reset?";
+      assert eipComponentBuilder == null
+          : "The top level element should only be entered once. Was the visitor reset?";
       // TODO: Figure out how to get flowtype and role.
       eipComponentBuilder =
           new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE);
@@ -65,10 +69,10 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
     if (visited) {
       element = childElements.get(xmlSchemaElement.getQName());
     } else {
-      var occurrence =
-          new Occurrence(xmlSchemaElement.getMinOccurs(), xmlSchemaElement.getMaxOccurs());
       element =
-          new EipChildElement.Builder(xmlSchemaElement.getName()).occurrence(occurrence).build();
+          new EipChildElement.Builder(xmlSchemaElement.getName())
+              .occurrence(getOccurrence(xmlSchemaElement))
+              .build();
     }
 
     var wrapper = new ChildCompositeWrapper(element, currElement);
@@ -89,10 +93,16 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   @Override
   public void onVisitAttribute(
       XmlSchemaElement xmlSchemaElement, XmlSchemaAttrInfo xmlSchemaAttrInfo) {
-    if (!xmlSchemaElement.isTopLevel()) {
+    Attribute attribute = attributeTranslator.translate(xmlSchemaAttrInfo);
+
+    if (xmlSchemaElement.isTopLevel()) {
+      eipComponentBuilder.addAttribute(attribute);
       return;
     }
-    eipComponentBuilder.addAttribute(attributeTranslator.translate(xmlSchemaAttrInfo));
+
+    if (currElement.wrappedChild instanceof EipChildElement child) {
+      child.addAttribute(attribute);
+    }
   }
 
   @Override
@@ -154,8 +164,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   }
 
   private void enterGroup(Indicator indicator, XmlSchemaGroupParticle particle) {
-    var occurrence = new Occurrence(particle.getMinOccurs(), particle.getMaxOccurs());
-    var group = new ChildGroup(indicator, occurrence);
+    var group = new ChildGroup(indicator, getOccurrence(particle));
     var wrapper = new ChildCompositeWrapper(group, currElement);
 
     // TODO: Prefer a cleaner way to do this one time check
@@ -173,8 +182,10 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
     currElement = currElement.parent();
   }
 
-  private void compressGroup() {
-
+  private Occurrence getOccurrence(XmlSchemaParticle particle) {
+    long max = particle.getMaxOccurs() == Long.MAX_VALUE ? -1 : particle.getMaxOccurs();
+    var occurrence = new Occurrence(particle.getMinOccurs(), max);
+    return occurrence.isDefault() ? null : occurrence;
   }
 
   private record ChildCompositeWrapper(ChildComposite wrappedChild, ChildCompositeWrapper parent) {}

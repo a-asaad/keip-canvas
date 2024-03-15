@@ -6,10 +6,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.octo.keip.schema.model.eip.Attribute;
+import com.octo.keip.schema.model.eip.ChildComposite;
+import com.octo.keip.schema.model.eip.ChildGroup;
+import com.octo.keip.schema.model.eip.EipChildElement;
 import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipElement;
 import com.octo.keip.schema.model.eip.EipSchema;
 import com.octo.keip.schema.model.eip.Restriction;
+import com.octo.keip.schema.serdes.ChildCompositeDeserializer;
 import com.octo.keip.schema.serdes.RestrictionDeserializer;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,7 +43,8 @@ public class SchemaToModelTest {
   @BeforeAll
   static void beforeAll() throws URISyntaxException, IOException {
     testXmlReader = getSchemaFileReader("sample.xml");
-    sampleEipSchema = importEipSchema("eipSample.json");
+    //    sampleEipSchema = importEipSchema("eipSample.json");
+    sampleEipSchema = importEipSchema("minimal-schema.json");
   }
 
   @Test
@@ -56,20 +61,24 @@ public class SchemaToModelTest {
         .forEach(
             (namespace, expectedComponents) -> {
               List<EipComponent> actualComponents = actualMap.get(namespace);
-              assertCompareCollections(
+              assertCollectionsEqualNoOrder(
                   expectedComponents,
                   actualComponents,
                   Comparator.comparing(EipElement::getName),
-                  this::assertComponentsEqual);
+                  this::assertEipComponentsEqual);
             });
   }
 
   // TODO: Simplify
-  private <T> void assertCompareCollections(
+  private <T> void assertCollectionsEqualNoOrder(
       Collection<T> expected,
       Collection<T> actual,
       Comparator<T> comparator,
       BiConsumer<T, T> assertion) {
+    if (expected == null && actual == null) {
+      return;
+    }
+
     assertEquals(expected.size(), actual.size());
 
     var expectedSort = expected.stream().sorted(comparator).toList();
@@ -80,19 +89,57 @@ public class SchemaToModelTest {
     }
   }
 
-  private void assertComponentsEqual(EipComponent expected, EipComponent actual) {
+  private void assertEipComponentsEqual(EipComponent expected, EipComponent actual) {
     Assertions.assertAll(
         () -> assertEquals(expected.getName(), actual.getName()),
         () -> assertEquals(expected.getRole(), actual.getRole()),
         () -> assertEquals(expected.getFlowType(), actual.getFlowType()),
         () -> assertEquals(expected.getDescription(), actual.getDescription()),
         () ->
-            assertCompareCollections(
+            assertCollectionsEqualNoOrder(
                 expected.getAttributes(),
                 actual.getAttributes(),
                 Comparator.comparing(Attribute::name),
                 Assertions::assertEquals),
-        () -> assertEquals(expected.getChildGroup(), actual.getChildGroup()));
+        () -> assertEipChildGroupsEqual(expected.getChildGroup(), actual.getChildGroup()));
+  }
+
+  // TODO: Refactor once ChildComposite is updated or removed from model.
+  private void assertEipChildGroupsEqual(ChildGroup expected, ChildGroup actual) {
+    // TODO: Alternatives to null guard clause
+    if (expected == null && actual == null) {
+      return;
+    }
+
+    List<EipChildElement> expectedChildren =
+        expected.children().stream().map(EipChildElement.class::cast).toList();
+
+    List<EipChildElement> actualChildren =
+        actual.children().stream().map(EipChildElement.class::cast).toList();
+
+    Assertions.assertAll(
+        () -> assertEquals(expected.indicator(), actual.indicator()),
+        () -> assertEquals(expected.occurrence(), actual.occurrence()),
+        () ->
+            assertCollectionsEqualNoOrder(
+                expectedChildren,
+                actualChildren,
+                Comparator.comparing(EipChildElement::getName),
+                this::assertEipChildElementEqual));
+  }
+
+  private void assertEipChildElementEqual(EipChildElement expected, EipChildElement actual) {
+    Assertions.assertAll(
+        () -> assertEquals(expected.getName(), actual.getName()),
+        () -> assertEquals(expected.getDescription(), actual.getDescription()),
+        () -> assertEquals(expected.occurrence(), actual.occurrence()),
+        () ->
+            assertCollectionsEqualNoOrder(
+                expected.getAttributes(),
+                actual.getAttributes(),
+                Comparator.comparing(Attribute::name),
+                Assertions::assertEquals),
+        () -> assertEipChildGroupsEqual(expected.getChildGroup(), actual.getChildGroup()));
   }
 
   private static BufferedReader getSchemaFileReader(String filename) {
@@ -122,6 +169,7 @@ public class SchemaToModelTest {
   private static Gson configureGson() {
     var gson = new GsonBuilder();
     gson.registerTypeAdapter(Restriction.class, new RestrictionDeserializer());
+    gson.registerTypeAdapter(ChildComposite.class, new ChildCompositeDeserializer());
     return gson.create();
   }
 }

@@ -36,8 +36,8 @@ public class SiSchemaTranslator {
 
       EipComponent.Builder eipComponentBuilder = eipVisitor.getEipComponent();
 
-      System.out.println(element.getName());
-      EipTranslationVisitor.printTree(eipComponentBuilder.build().getChildGroup(), "");
+//      System.out.println(element.getName());
+//      EipTranslationVisitor.printTree(eipComponentBuilder.build().getChildGroup(), "");
 
       // TODO: Figure out how to get flowtype and role.
       // TODO: Extract
