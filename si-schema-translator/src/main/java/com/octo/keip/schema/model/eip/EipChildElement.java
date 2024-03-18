@@ -13,12 +13,19 @@ public final class EipChildElement extends EipElement implements ChildComposite 
 
   @Override
   public void addChild(ChildComposite child) {
-    // TODO: Not great to have to cast here. Rethink.
-    this.setChildGroup((ChildGroup) child);
+    this.setChildGroup(child);
   }
 
   public Occurrence occurrence() {
     return occurrence;
+  }
+
+  public EipChildElement childlessCopy() {
+    return new Builder(this.name)
+        .description(this.description)
+        .attributes(this.attributes)
+        .occurrence(this.occurrence)
+        .build();
   }
 
   public static class Builder extends EipElement.Builder<Builder> {

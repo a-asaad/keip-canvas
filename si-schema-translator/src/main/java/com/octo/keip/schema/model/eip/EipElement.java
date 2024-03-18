@@ -8,7 +8,7 @@ public abstract class EipElement {
   protected final String name;
   protected final String description;
   protected Set<Attribute> attributes;
-  protected ChildGroup childGroup;
+  protected ChildComposite childGroup;
 
   protected EipElement(Builder<?> builder) {
     this.name = builder.name;
@@ -29,12 +29,11 @@ public abstract class EipElement {
     return attributes;
   }
 
-  public ChildGroup getChildGroup() {
+  public ChildComposite getChildGroup() {
     return childGroup;
   }
 
-  // TODO: Should we preserve immutability? (Also applies somewhat to addAttribute)
-  public void setChildGroup(ChildGroup childGroup) {
+  public void setChildGroup(ChildComposite childGroup) {
     this.childGroup = childGroup;
   }
 

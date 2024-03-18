@@ -1,5 +1,6 @@
 package com.octo.keip.schema.xml;
 
+import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipSchema;
 import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
@@ -36,20 +37,17 @@ public class SiSchemaTranslator {
 
       EipComponent.Builder eipComponentBuilder = eipVisitor.getEipComponent();
 
-//      System.out.println(element.getName());
-//      EipTranslationVisitor.printTree(eipComponentBuilder.build().getChildGroup(), "");
-
-      // TODO: Figure out how to get flowtype and role.
-      // TODO: Extract
-      //      EipComponent.Builder componentBuilder =
-      //          new EipComponent.Builder(element.getName(), Role.ENDPOINT, FlowType.SOURCE)
-      //              .attributes(eipAttributes);
-
       String description = AnnotationTranslator.getDescription(element.getAnnotation());
       if (!description.isBlank()) {
         eipComponentBuilder.description(description);
       }
-      eipSchema.addComponent(namespace, eipComponentBuilder.build());
+
+      var reducer = new ChildGroupReducer();
+      ChildGroup reduced = reducer.reduce(eipComponentBuilder.build().getChildGroup());
+
+//      EipTranslationVisitor.printTree(reduced, "");
+
+      eipSchema.addComponent(namespace, eipComponentBuilder.childGroup(reduced).build());
     }
 
     // getParticle -> XmlSchemaParticle

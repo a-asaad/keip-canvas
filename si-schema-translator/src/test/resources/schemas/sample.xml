@@ -6,72 +6,64 @@
             elementFormDefault="qualified"
             attributeFormDefault="unqualified">
 
-    <xsd:element name="test-child-group">
+    <xsd:element name="inbound-channel-adapter">
+        <xsd:annotation>
+            <xsd:documentation>
+                Defines a Polling Channel Adapter
+            </xsd:documentation>
+        </xsd:annotation>
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element name="expression" type="innerExpressionType"/>
+                <xsd:choice minOccurs="0" maxOccurs="1">
+                    <xsd:sequence>
+<!--                        <xsd:element name="poller" type="basePollerType"/>-->
+<!--                        <xsd:element name="poller" type="xsd:string"/>-->
+                        <xsd:choice minOccurs="0" maxOccurs="1">
+                            <xsd:element name="expression" type="innerExpressionType"/>
+                            <xsd:any namespace="##other"/>
+                        </xsd:choice>
+                    </xsd:sequence>
+                    <xsd:sequence>
+                        <xsd:choice>
+                            <xsd:element name="expression" type="innerExpressionType"/>
+                            <xsd:any namespace="##other"/>
+                        </xsd:choice>
+<!--                        <xsd:element name="poller" type="basePollerType" minOccurs="0"-->
+<!--                                     maxOccurs="1"/>-->
+<!--                        <xsd:element name="poller" type="xsd:string"/>-->
+                    </xsd:sequence>
+                </xsd:choice>
                 <xsd:element name="header" type="headerSubElementType" minOccurs="0"
                              maxOccurs="unbounded"/>
             </xsd:sequence>
+            <xsd:attributeGroup ref="channelAdapterAttributes"/>
+            <xsd:attribute name="send-timeout" type="xsd:integer" default="-1">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        Maximum amount of time to wait when sending a message to the
+                        channel
+                        Defaults to '-1' - blocking indefinitely.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="timeout-unit">
+                <xsd:simpleType>
+                    <xsd:union memberTypes="timeUnitEnumeration xsd:string"/>
+                </xsd:simpleType>
+            </xsd:attribute>
         </xsd:complexType>
     </xsd:element>
 
-    <!--    <xsd:element name="inbound-channel-adapter">-->
-    <!--        <xsd:annotation>-->
-    <!--            <xsd:documentation>-->
-    <!--                Defines a Polling Channel Adapter-->
-    <!--            </xsd:documentation>-->
-    <!--        </xsd:annotation>-->
-    <!--        <xsd:complexType>-->
-    <!--            <xsd:sequence>-->
-    <!--                <xsd:choice minOccurs="0" maxOccurs="1">-->
-    <!--                    <xsd:sequence>-->
-    <!--                        <xsd:element name="poller" type="basePollerType"/>-->
-    <!--                        <xsd:choice minOccurs="0" maxOccurs="1">-->
-    <!--                            <xsd:element name="expression" type="innerExpressionType"/>-->
-    <!--                            <xsd:any namespace="##other"/>-->
-    <!--                        </xsd:choice>-->
-    <!--                    </xsd:sequence>-->
-    <!--                    <xsd:sequence>-->
-    <!--                        <xsd:choice>-->
-    <!--                            <xsd:element name="expression" type="innerExpressionType"/>-->
-    <!--                            <xsd:any namespace="##other"/>-->
-    <!--                        </xsd:choice>-->
-    <!--                        <xsd:element name="poller" type="basePollerType" minOccurs="0"-->
-    <!--                                     maxOccurs="1"/>-->
-    <!--                    </xsd:sequence>-->
-    <!--                </xsd:choice>-->
-    <!--                <xsd:element name="header" type="headerSubElementType" minOccurs="0"-->
-    <!--                             maxOccurs="unbounded"/>-->
-    <!--            </xsd:sequence>-->
-    <!--            <xsd:attributeGroup ref="channelAdapterAttributes"/>-->
-    <!--            <xsd:attribute name="send-timeout" type="xsd:integer" default="-1">-->
-    <!--                <xsd:annotation>-->
-    <!--                    <xsd:documentation>-->
-    <!--                        Maximum amount of time to wait when sending a message to the-->
-    <!--                        channel-->
-    <!--                        Defaults to '-1' - blocking indefinitely.-->
-    <!--                    </xsd:documentation>-->
-    <!--                </xsd:annotation>-->
-    <!--            </xsd:attribute>-->
-    <!--            <xsd:attribute name="timeout-unit">-->
-    <!--                <xsd:simpleType>-->
-    <!--                    <xsd:union memberTypes="timeUnitEnumeration xsd:string"/>-->
-    <!--                </xsd:simpleType>-->
-    <!--            </xsd:attribute>-->
-    <!--        </xsd:complexType>-->
-    <!--    </xsd:element>-->
-
-    <!--    <xsd:element name="sample-filter">-->
-    <!--        <xsd:annotation></xsd:annotation>-->
-    <!--        <xsd:complexType>-->
-    <!--            <xsd:complexContent>-->
-    <!--                <xsd:extension base="sample-filter-type">-->
-    <!--                    <xsd:attributeGroup ref="inputOutputChannelGroup"/>-->
-    <!--                </xsd:extension>-->
-    <!--            </xsd:complexContent>-->
-    <!--        </xsd:complexType>-->
-    <!--    </xsd:element>-->
+<!--    <xsd:element name="sample-filter">-->
+<!--        <xsd:annotation></xsd:annotation>-->
+<!--        <xsd:complexType>-->
+<!--            <xsd:complexContent>-->
+<!--                <xsd:extension base="sample-filter-type">-->
+<!--                    <xsd:attributeGroup ref="inputOutputChannelGroup"/>-->
+<!--                </xsd:extension>-->
+<!--            </xsd:complexContent>-->
+<!--        </xsd:complexType>-->
+<!--    </xsd:element>-->
 
     <xsd:attributeGroup name="inputOutputChannelGroup">
         <xsd:attribute name="output-channel" type="xsd:string">

@@ -1,6 +1,7 @@
 package com.octo.keip.schema.xml;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -43,8 +44,8 @@ public class SchemaToModelTest {
   @BeforeAll
   static void beforeAll() throws URISyntaxException, IOException {
     testXmlReader = getSchemaFileReader("sample.xml");
-    //    sampleEipSchema = importEipSchema("eipSample.json");
-    sampleEipSchema = importEipSchema("minimal-schema.json");
+//    sampleEipSchema = importEipSchema("eipSample.json");
+    sampleEipSchema = importEipSchema("/tmp/minimal-schema.json");
   }
 
   @Test
@@ -65,7 +66,8 @@ public class SchemaToModelTest {
                   expectedComponents,
                   actualComponents,
                   Comparator.comparing(EipElement::getName),
-                  this::assertEipComponentsEqual);
+                  this::assertEipComponentsEqual,
+                  "Comparing top level components");
             });
   }
 
@@ -74,12 +76,13 @@ public class SchemaToModelTest {
       Collection<T> expected,
       Collection<T> actual,
       Comparator<T> comparator,
-      BiConsumer<T, T> assertion) {
+      BiConsumer<T, T> assertion,
+      String message) {
     if (expected == null && actual == null) {
       return;
     }
 
-    assertEquals(expected.size(), actual.size());
+    assertEquals(expected.size(), actual.size(), message);
 
     var expectedSort = expected.stream().sorted(comparator).toList();
     var actualSort = actual.stream().sorted(comparator).toList();
@@ -100,32 +103,41 @@ public class SchemaToModelTest {
                 expected.getAttributes(),
                 actual.getAttributes(),
                 Comparator.comparing(Attribute::name),
-                Assertions::assertEquals),
+                Assertions::assertEquals,
+                String.format(
+                    "Comparing EIP Component Attributes (component: %s)", expected.getName())),
         () -> assertEipChildGroupsEqual(expected.getChildGroup(), actual.getChildGroup()));
   }
 
   // TODO: Refactor once ChildComposite is updated or removed from model.
-  private void assertEipChildGroupsEqual(ChildGroup expected, ChildGroup actual) {
+  private void assertEipChildGroupsEqual(ChildComposite expected, ChildComposite actual) {
     // TODO: Alternatives to null guard clause
     if (expected == null && actual == null) {
       return;
     }
 
+    assertTrue(expected instanceof ChildGroup);
+    assertTrue(actual instanceof ChildGroup);
+
+    var expectedGroup = (ChildGroup) expected;
+    var actualGroup = (ChildGroup) actual;
+
     List<EipChildElement> expectedChildren =
-        expected.children().stream().map(EipChildElement.class::cast).toList();
+        expectedGroup.children().stream().map(EipChildElement.class::cast).toList();
 
     List<EipChildElement> actualChildren =
-        actual.children().stream().map(EipChildElement.class::cast).toList();
+        actualGroup.children().stream().map(EipChildElement.class::cast).toList();
 
     Assertions.assertAll(
-        () -> assertEquals(expected.indicator(), actual.indicator()),
+        () -> assertEquals(expectedGroup.indicator(), actualGroup.indicator()),
         () -> assertEquals(expected.occurrence(), actual.occurrence()),
         () ->
             assertCollectionsEqualNoOrder(
                 expectedChildren,
                 actualChildren,
                 Comparator.comparing(EipChildElement::getName),
-                this::assertEipChildElementEqual));
+                this::assertEipChildElementEqual,
+                "Comparing Child Groups"));
   }
 
   private void assertEipChildElementEqual(EipChildElement expected, EipChildElement actual) {
@@ -138,7 +150,8 @@ public class SchemaToModelTest {
                 expected.getAttributes(),
                 actual.getAttributes(),
                 Comparator.comparing(Attribute::name),
-                Assertions::assertEquals),
+                Assertions::assertEquals,
+                String.format("Comparing child elements (child-name: %s)", expected.getName())),
         () -> assertEipChildGroupsEqual(expected.getChildGroup(), actual.getChildGroup()));
   }
 

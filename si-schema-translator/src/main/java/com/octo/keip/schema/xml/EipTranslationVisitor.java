@@ -107,19 +107,13 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onEndAttributes(
-      XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo) {
-    int i = 5;
-  }
+      XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo) {}
 
   @Override
-  public void onEnterSubstitutionGroup(XmlSchemaElement xmlSchemaElement) {
-    int i = 5;
-  }
+  public void onEnterSubstitutionGroup(XmlSchemaElement xmlSchemaElement) {}
 
   @Override
-  public void onExitSubstitutionGroup(XmlSchemaElement xmlSchemaElement) {
-    int i = 5;
-  }
+  public void onExitSubstitutionGroup(XmlSchemaElement xmlSchemaElement) {}
 
   @Override
   public void onEnterAllGroup(XmlSchemaAll xmlSchemaAll) {
@@ -154,14 +148,11 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   @Override
   public void onVisitAny(XmlSchemaAny xmlSchemaAny) {
     // TODO: Might need to parse this for arbitrary beans.
-    int i = 5;
   }
 
   @Override
   public void onVisitAnyAttribute(
-      XmlSchemaElement xmlSchemaElement, XmlSchemaAnyAttribute xmlSchemaAnyAttribute) {
-    int i = 5;
-  }
+      XmlSchemaElement xmlSchemaElement, XmlSchemaAnyAttribute xmlSchemaAnyAttribute) {}
 
   private void enterGroup(Indicator indicator, XmlSchemaGroupParticle particle) {
     var group = new ChildGroup(indicator, getOccurrence(particle));
@@ -198,7 +189,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
     if (child instanceof EipChildElement element) {
       System.out.println(element.getName());
       if (element.getChildGroup() != null) {
-        children = element.getChildGroup().children();
+        children = ((ChildGroup) element.getChildGroup()).children();
       }
     } else if (child instanceof ChildGroup group) {
       System.out.println(group.indicator());
