@@ -46,7 +46,9 @@ public class SiSchemaTranslator {
       var reducer = new ChildGroupReducer();
       ChildGroup reduced = reducer.reduce(eipComponentBuilder.build().getChildGroup());
 
-//      EipTranslationVisitor.printTree(reduced, "");
+      System.out.println("Component: " + element.getName());
+      EipTranslationVisitor.printTree(reduced, "");
+      System.out.println();
 
       eipSchema.addComponent(namespace, eipComponentBuilder.childGroup(reduced).build());
     }

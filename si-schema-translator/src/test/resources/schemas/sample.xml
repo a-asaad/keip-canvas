@@ -17,7 +17,7 @@
                 <xsd:choice minOccurs="0" maxOccurs="1">
                     <xsd:sequence>
 <!--                        <xsd:element name="poller" type="basePollerType"/>-->
-<!--                        <xsd:element name="poller" type="xsd:string"/>-->
+                        <xsd:element name="poller" type="xsd:string"/>
                         <xsd:choice minOccurs="0" maxOccurs="1">
                             <xsd:element name="expression" type="innerExpressionType"/>
                             <xsd:any namespace="##other"/>
@@ -30,7 +30,7 @@
                         </xsd:choice>
 <!--                        <xsd:element name="poller" type="basePollerType" minOccurs="0"-->
 <!--                                     maxOccurs="1"/>-->
-<!--                        <xsd:element name="poller" type="xsd:string"/>-->
+                        <xsd:element name="poller" type="xsd:string"/>
                     </xsd:sequence>
                 </xsd:choice>
                 <xsd:element name="header" type="headerSubElementType" minOccurs="0"
@@ -54,16 +54,16 @@
         </xsd:complexType>
     </xsd:element>
 
-<!--    <xsd:element name="sample-filter">-->
-<!--        <xsd:annotation></xsd:annotation>-->
-<!--        <xsd:complexType>-->
-<!--            <xsd:complexContent>-->
-<!--                <xsd:extension base="sample-filter-type">-->
-<!--                    <xsd:attributeGroup ref="inputOutputChannelGroup"/>-->
-<!--                </xsd:extension>-->
-<!--            </xsd:complexContent>-->
-<!--        </xsd:complexType>-->
-<!--    </xsd:element>-->
+    <xsd:element name="sample-filter">
+        <xsd:annotation></xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="sample-filter-type">
+                    <xsd:attributeGroup ref="inputOutputChannelGroup"/>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
 
     <xsd:attributeGroup name="inputOutputChannelGroup">
         <xsd:attribute name="output-channel" type="xsd:string">
