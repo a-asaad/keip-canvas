@@ -10,6 +10,7 @@ import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
 
+// TODO: Add some comments
 public class SiSchemaTranslator {
 
   private static final String DEFAULT_NAMESPACE_URI = "http://www.example.com/schema/default";
