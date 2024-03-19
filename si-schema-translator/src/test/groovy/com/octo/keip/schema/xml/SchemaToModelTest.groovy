@@ -3,7 +3,14 @@ package com.octo.keip.schema.xml
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.octo.keip.schema.model.eip.*
+import com.octo.keip.schema.model.eip.Attribute
+import com.octo.keip.schema.model.eip.ChildComposite
+import com.octo.keip.schema.model.eip.ChildGroup
+import com.octo.keip.schema.model.eip.EipChildElement
+import com.octo.keip.schema.model.eip.EipComponent
+import com.octo.keip.schema.model.eip.EipElement
+import com.octo.keip.schema.model.eip.EipSchema
+import com.octo.keip.schema.model.eip.Restriction
 import com.octo.keip.schema.serdes.ChildCompositeDeserializer
 import com.octo.keip.schema.serdes.RestrictionDeserializer
 import spock.lang.Specification
