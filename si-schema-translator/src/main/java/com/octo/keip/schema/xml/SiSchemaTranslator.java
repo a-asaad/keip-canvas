@@ -4,6 +4,7 @@ import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipSchema;
 import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
+import com.octo.keip.schema.xml.visitor.EipTranslationVisitor;
 import java.io.Reader;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
@@ -14,6 +15,8 @@ import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
 public class SiSchemaTranslator {
 
   private static final String DEFAULT_NAMESPACE_URI = "http://www.example.com/schema/default";
+
+  private final ChildGroupReducer groupReducer = new ChildGroupReducer();
 
   public EipSchema apply(String namespace, Reader xmlReader) {
     var schemaCol = new XmlSchemaCollection();
@@ -43,8 +46,7 @@ public class SiSchemaTranslator {
         eipComponentBuilder.description(description);
       }
 
-      var reducer = new ChildGroupReducer();
-      ChildGroup reduced = reducer.reduce(eipComponentBuilder.build().getChildGroup());
+      ChildGroup reduced = groupReducer.reduceGroup(eipComponentBuilder.build().getChildGroup());
 
       System.out.println("Component: " + element.getName());
       EipTranslationVisitor.printTree(reduced, "");

@@ -3,127 +3,163 @@ package com.octo.keip.schema.xml;
 import com.octo.keip.schema.model.eip.ChildComposite;
 import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipChildElement;
-import java.util.ArrayList;
+import com.octo.keip.schema.model.eip.Indicator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-// TODO: Eliminate casts and use polymorphism instead.
+// TODO: Make methods static?
 public class ChildGroupReducer {
 
-  public ChildGroup reduce(ChildComposite composite) {
-    ChildComposite result = reduce(composite, null);
-    return (ChildGroup) result;
+  public ChildGroup reduceGroup(ChildComposite group) {
+    ChildComposite reduced = reduce(group);
+    return (ChildGroup) reduced;
   }
 
-  private ChildComposite reduce(ChildComposite composite, ChildComposite updated) {
-    if (composite == null) {
-      return null;
-    }
-
-    switch (composite) {
+  private ChildComposite reduce(ChildComposite composite) {
+    return switch (composite) {
+      case null -> null;
       case EipChildElement element -> {
-        EipChildElement elementCopy = element.childlessCopy();
-        reduce(element.getChildGroup(), elementCopy);
-        updated.addChild(elementCopy);
+        ChildComposite group = reduce(element.getChildGroup());
+        yield reduce(element.copyWith(group));
       }
       case ChildGroup group -> {
-        // TODO: Refactor
-        ChildGroup groupCopy = group.childlessCopy();
-        group.children().forEach(c -> reduce(c, groupCopy));
-        ChildGroup deDuplicated = deDuplicated(groupCopy);
-        if (updated == null) {
-          updated = deDuplicated;
-        } else {
-          updated.addChild(deDuplicated);
-        }
+        List<ChildComposite> children = group.children().stream().map(this::reduce).toList();
+        yield reduce(group.copyWith(children));
       }
-    }
-
-    return updated;
+    };
   }
 
-  public ChildGroup deDuplicated(ChildGroup group) {
+  private ChildComposite reduce(EipChildElement element) {
+    return element;
+  }
+
+  private ChildComposite reduce(ChildGroup group) {
     List<UnaryOperator<ChildGroup>> reducers =
         List.of(
-            this::deDuplicateElements,
             this::removeRedundantGroups,
             this::reduceSingleChildGroup,
-            this::combineSameIndicatorGroups);
+            this::combineSameIndicatorGroups,
+            this::deDuplicateElements);
 
-    ChildGroup deDuplicated = group;
+    ChildGroup reduced = group;
     for (var r : reducers) {
-      deDuplicated = r.apply(deDuplicated);
+      reduced = r.apply(reduced);
     }
 
-    return deDuplicated;
+    return reduced;
   }
 
   // Remove duplicated elements in a child group
   private ChildGroup deDuplicateElements(ChildGroup group) {
     Set<String> names = new HashSet<>();
-    List<ChildComposite> noDups = new ArrayList<>(group.children().size());
-    for (var c : group.children()) {
-      if (c instanceof EipChildElement element) {
-        if (names.add(element.getName())) {
-          noDups.add(c);
-        }
-      } else {
-        noDups.add(c);
-      }
-    }
-    return group.replaceChildren(noDups);
+    List<ChildComposite> deDuplicated =
+        group.children().stream()
+            .map(
+                child ->
+                    switch (child) {
+                      case EipChildElement element -> {
+                        if (names.add(element.getName())) {
+                          yield element;
+                        }
+                        yield null;
+                      }
+                      case ChildGroup cg -> cg;
+                    })
+            .filter(Objects::nonNull)
+            .toList();
+
+    return group.copyWith(deDuplicated);
   }
 
   //   Remove adjacent groups with the same (possibly in a different order) child elements
   private ChildGroup removeRedundantGroups(ChildGroup group) {
     Set<String> elementNames = new HashSet<>();
-    Set<ChildGroup> toRemove = new HashSet<>();
-    for (var child : group.children()) {
-      if (child instanceof ChildGroup cg) {
-        if (cg.children().stream().allMatch(c -> c instanceof EipChildElement)) {
-          String combinedName =
-              cg.children().stream()
-                  .map(EipChildElement.class::cast)
-                  .map(EipChildElement::getName)
-                  .sorted()
-                  .collect(Collectors.joining(""));
-          if (!elementNames.add(combinedName)) {
-            toRemove.add(cg);
-          }
-        }
-      }
-    }
-    List<ChildComposite> updated =
+
+    List<ChildComposite> reducedChildren =
         group.children().stream()
-            .filter(c -> c instanceof EipChildElement || !toRemove.contains(c))
+            .filter(
+                child ->
+                    switch (child) {
+                      case EipChildElement element -> true;
+                      case ChildGroup cg -> {
+                        if (allChildrenAreElements(cg)) {
+                          String combinedChildNames = concatChildNames(cg);
+                          yield elementNames.add(combinedChildNames);
+                        }
+                        yield true;
+                      }
+                    })
             .toList();
-    return group.replaceChildren(updated);
+
+    return group.copyWith(reducedChildren);
   }
 
+  // TODO: Account for occurrence
   private ChildGroup reduceSingleChildGroup(ChildGroup group) {
-    List<ChildComposite> updated = new ArrayList<>(group.children().size());
-    for (var child : group.children()) {
-      if (child instanceof ChildGroup cg && cg.children().size() == 1) {
-        updated.add(cg.children().getFirst());
-      } else {
-        updated.add(child);
-      }
-    }
-    return group.replaceChildren(updated);
+    List<ChildComposite> reducedChildren =
+        group.children().stream()
+            .map(
+                child ->
+                    switch (child) {
+                      case EipChildElement element -> element;
+                      case ChildGroup cg -> {
+                        if (cg.children().size() == 1) {
+                          yield cg.children().getFirst();
+                        } else {
+                          yield cg;
+                        }
+                      }
+                    })
+            .toList();
+
+    return group.copyWith(reducedChildren);
   }
 
+  // TODO: Account for occurrence
   private ChildGroup combineSameIndicatorGroups(ChildGroup group) {
-    List<ChildComposite> updated = new ArrayList<>(group.children().size());
-    for (var child : group.children()) {
-      if (child instanceof ChildGroup cg && cg.indicator().equals(group.indicator())) {
-        updated.addAll(cg.children());
-      } else {
-        updated.add(child);
-      }
-    }
-    return group.replaceChildren(updated);
+    List<ChildComposite> reducedChildren =
+        group.children().stream()
+            .flatMap(
+                child ->
+                    switch (child) {
+                      case EipChildElement element -> Stream.of(element);
+                      case ChildGroup cg -> {
+                        if (isReducibleIndicator(cg.indicator())
+                            && cg.indicator().equals(group.indicator())) {
+                          yield cg.children().stream();
+                        } else {
+                          yield Stream.of(cg);
+                        }
+                      }
+                    })
+            .toList();
+
+    return group.copyWith(reducedChildren);
+  }
+
+  private boolean isReducibleIndicator(Indicator indicator) {
+    return !Indicator.CHOICE.equals(indicator);
+  }
+
+  private String concatChildNames(ChildGroup group) {
+    return group.children().stream()
+        .map(
+            child ->
+                switch (child) {
+                  case EipChildElement element -> element.getName();
+                  case ChildGroup ignored -> null;
+                })
+        .filter(Objects::nonNull)
+        .sorted()
+        .collect(Collectors.joining(""));
+  }
+
+  private boolean allChildrenAreElements(ChildGroup cg) {
+    return cg.children().stream().allMatch(c -> c instanceof EipChildElement);
   }
 }

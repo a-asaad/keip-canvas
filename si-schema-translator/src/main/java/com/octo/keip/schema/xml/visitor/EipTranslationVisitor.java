@@ -1,4 +1,4 @@
-package com.octo.keip.schema.xml;
+package com.octo.keip.schema.xml.visitor;
 
 import com.octo.keip.schema.model.eip.Attribute;
 import com.octo.keip.schema.model.eip.ChildComposite;
