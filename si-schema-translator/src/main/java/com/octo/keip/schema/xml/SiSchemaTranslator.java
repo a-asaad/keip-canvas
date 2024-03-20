@@ -3,7 +3,6 @@ package com.octo.keip.schema.xml;
 import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipSchema;
-import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
 import com.octo.keip.schema.xml.visitor.EipTranslationVisitor;
 import java.io.Reader;
 import org.apache.ws.commons.schema.XmlSchema;
@@ -24,6 +23,7 @@ public class SiSchemaTranslator {
     return translate(namespace, schemaCol, xmlSchema);
   }
 
+  // TODO: Refactor
   private EipSchema translate(
       String namespace, XmlSchemaCollection schemaCol, XmlSchema xmlSchema) {
     var eipSchema = new EipSchema();
@@ -41,16 +41,12 @@ public class SiSchemaTranslator {
 
       EipComponent.Builder eipComponentBuilder = eipVisitor.getEipComponent();
 
-      String description = AnnotationTranslator.getDescription(element.getAnnotation());
-      if (!description.isBlank()) {
-        eipComponentBuilder.description(description);
-      }
-
       ChildGroup reduced = groupReducer.reduceGroup(eipComponentBuilder.build().getChildGroup());
 
-      System.out.println("Component: " + element.getName());
-      EipTranslationVisitor.printTree(reduced, "");
-      System.out.println();
+      // TODO: Remove
+      //      System.out.println("Component: " + element.getName());
+      //      EipTranslationVisitor.printTree(reduced, "");
+      //      System.out.println();
 
       eipSchema.addComponent(namespace, eipComponentBuilder.childGroup(reduced).build());
     }

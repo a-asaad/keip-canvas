@@ -9,6 +9,7 @@ import com.octo.keip.schema.model.eip.FlowType;
 import com.octo.keip.schema.model.eip.Indicator;
 import com.octo.keip.schema.model.eip.Occurrence;
 import com.octo.keip.schema.model.eip.Role;
+import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
 import com.octo.keip.schema.xml.attribute.XmlAttributeTranslator;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +62,8 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
           : "The top level element should only be entered once. Was the visitor reset?";
       // TODO: Figure out how to get flowtype and role.
       eipComponentBuilder =
-          new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE);
+          new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE)
+              .description(AnnotationTranslator.getDescription(xmlSchemaElement));
       return;
     }
 
@@ -75,6 +77,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
       element =
           new EipChildElement.Builder(xmlSchemaElement.getName())
               .occurrence(getOccurrence(xmlSchemaElement))
+              .description(AnnotationTranslator.getDescription(xmlSchemaElement))
               .build();
     }
 

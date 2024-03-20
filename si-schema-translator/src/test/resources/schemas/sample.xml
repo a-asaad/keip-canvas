@@ -161,7 +161,7 @@
         <xsd:attribute name="handler-spec-extension">
             <xsd:simpleType>
                 <!-- Warning: Extending restrictions with bases are not supported currently -->
-                <!-- This attribute will have a single enum only, ignoring the ones defined in base -->
+                <!-- This attribute will have a single enum only (i.e. "SINGLE"), ignoring the ones defined in base -->
                 <xsd:restriction base="handlerEndpointEnumeration">
                     <xsd:enumeration value="SINGLE"/>
                 </xsd:restriction>
@@ -182,112 +182,13 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:choice>
-                <xsd:element name="transactional" type="transactionalType" minOccurs="0"
-                             maxOccurs="1">
-                    <xsd:annotation>
-                        <xsd:documentation>
-                            Run each poll task in a transaction; mutually exclusive
-                            with 'advice-chain'; add a transaction advice if you need transactions
-                            in addition to other advices.
-                        </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:element>
-                <xsd:element name="advice-chain" type="adviceChainType" minOccurs="0" maxOccurs="1">
-                    <xsd:annotation>
-                        <xsd:documentation>
-                            A chain of nested AOP 'Advice' objects applied to the poller task.
-                            Mutually exclusive with 'transactional'.
-                        </xsd:documentation>
-                    </xsd:annotation>
-                </xsd:element>
+                <xsd:element name="transactional" type="transactionalType" minOccurs="0" maxOccurs="1"/>
+                <xsd:element name="advice-chain" type="adviceChainType" minOccurs="0" maxOccurs="1"/>
             </xsd:choice>
         </xsd:sequence>
-        <xsd:attribute name="fixed-delay" type="xsd:string">
+        <xsd:attribute name="fixed-delay" type="xsd:integer">
             <xsd:annotation>
                 <xsd:documentation>Fixed delay trigger (in milliseconds).</xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="ref" type="xsd:string" use="optional">
-            <xsd:annotation>
-                <xsd:documentation>
-                    Allows this poller to reference another instance of a top-level poller.
-                    [IMPORTANT] - This attribute is only allowed on inner poller definitions.
-                    Defining this attribute on a top-level poller definition will result in a
-                    configuration exception.
-                </xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="fixed-rate" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation>Fixed rate trigger (in milliseconds).</xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="time-unit">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-	The java.util.concurrent.TimeUnit enum value. This can ONLY be used in combination
-	with the 'fixed-delay' or 'fixed-rate' attributes. If combined with either 'cron'
-	or a 'trigger' reference attribute, it will cause a failure. The minimal supported
-	granularity for a PeriodicTrigger is MILLISECONDS. Therefore, the only available options
-	are MILLISECONDS and SECONDS. If this value is not provided, then any 'fixed-delay' or
-	'fixed-rate' value will be interpreted as MILLISECONDS by default. Basically this enum
-	provides a convenience for SECONDS-based interval trigger values. For hourly, daily,
-	and monthly settings, consider using a 'cron' trigger instead.
-				]]></xsd:documentation>
-            </xsd:annotation>
-            <xsd:simpleType>
-                <xsd:union memberTypes="timeUnitEnumeration xsd:string"/>
-            </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute name="cron" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation>Cron trigger.</xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="trigger" type="xsd:string">
-            <xsd:annotation>
-                <xsd:appinfo>
-                    <tool:annotation kind="ref">
-                        <tool:expected-type type="org.springframework.scheduling.Trigger"/>
-                    </tool:annotation>
-                </xsd:appinfo>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="receive-timeout" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation>
-                    Only applies to polling consumers - the time the poll thread will wait
-                    after the trigger for a new message to arrive. Defaults to 1000 (1 second).
-                    For polled inbound channel adapters, whether or not the polling thread blocks is
-                    dependent on the message source implementation.
-                </xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="max-messages-per-poll" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation>
-                    The maximum number of messages that will be produced for each poll. Defaults to
-                    infinity (indicated by -1) for polling consumers, and 1 for polled
-                    inbound channel adapters.
-                </xsd:documentation>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="task-executor" type="xsd:string">
-            <xsd:annotation>
-                <xsd:appinfo>
-                    <tool:annotation kind="ref">
-                        <tool:expected-type type="org.springframework.core.task.TaskExecutor"/>
-                    </tool:annotation>
-                </xsd:appinfo>
-            </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="error-channel" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-					Identifies channel that error messages will be sent to if a failure occurs in this
-					poller's invocation. To completely suppress Exceptions, provide a
-					reference to the "nullChannel" here.
-				]]></xsd:documentation>
             </xsd:annotation>
         </xsd:attribute>
     </xsd:complexType>
@@ -316,12 +217,6 @@
     </xsd:complexType>
 
     <xsd:complexType name="headerSubElementType">
-        <xsd:annotation>
-            <xsd:documentation>    <![CDATA[
-				Provides mechanism to enrich content of the message with custom message headers. When this method is going to be invoked
-				the generated message will be enriched with these headers.
-			]]></xsd:documentation>
-        </xsd:annotation>
         <xsd:attribute name="name" type="xsd:string" use="required">
             <xsd:annotation>
                 <xsd:documentation><![CDATA[
@@ -360,27 +255,7 @@
     </xsd:attributeGroup>
 
     <xsd:complexType name="transactionalType">
-        <xsd:attribute name="transaction-manager" type="xsd:string" default="transactionManager">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-	The bean name of the PlatformTransactionManager to use.
-				]]></xsd:documentation>
-                <xsd:appinfo>
-                    <tool:annotation kind="ref">
-                        <tool:expected-type
-                                type="org.springframework.transaction.PlatformTransactionManager"/>
-                    </tool:annotation>
-                </xsd:appinfo>
-            </xsd:annotation>
-        </xsd:attribute>
         <xsd:attribute name="propagation" default="REQUIRED">
-            <xsd:annotation>
-                <xsd:documentation
-                        source="java:org.springframework.transaction.annotation.Propagation">
-                    <![CDATA[
-	The transaction propagation behavior.
-				]]></xsd:documentation>
-            </xsd:annotation>
             <xsd:simpleType>
                 <xsd:union memberTypes="propagationEnumeration xsd:string"/>
             </xsd:simpleType>
@@ -407,21 +282,6 @@
                          maxOccurs="unbounded"/>
             </xsd:choice>
         </xsd:sequence>
-        <xsd:attribute name="synchronization-factory" type="xsd:string">
-            <xsd:annotation>
-                <xsd:documentation><![CDATA[
-	Reference to an instance of org.springframework.integration.transaction.TransactionSynchronizationFactory
-	which will return an instance of org.springframework.transaction.support.TransactionSynchronization via its create(..) method.
-	Setting of this attribute will only have an affect if a Transaction advice is present in the chain.
-				]]></xsd:documentation>
-                <xsd:appinfo>
-                    <tool:annotation kind="ref">
-                        <tool:expected-type
-                                type="org.springframework.integration.transaction.TransactionSynchronizationFactory"/>
-                    </tool:annotation>
-                </xsd:appinfo>
-            </xsd:annotation>
-        </xsd:attribute>
     </xsd:complexType>
 
     <xsd:simpleType name="timeUnitEnumeration">
@@ -456,11 +316,7 @@ See 'SmartLifecycleRoleController'.
         <xsd:restriction base="xsd:string">
             <xsd:enumeration value="REQUIRED"/>
             <xsd:enumeration value="SUPPORTS"/>
-            <xsd:enumeration value="MANDATORY"/>
-            <xsd:enumeration value="REQUIRES_NEW"/>
-            <xsd:enumeration value="NOT_SUPPORTED"/>
             <xsd:enumeration value="NEVER"/>
-            <xsd:enumeration value="NESTED"/>
         </xsd:restriction>
     </xsd:simpleType>
 

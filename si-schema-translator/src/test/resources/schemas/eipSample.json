@@ -45,7 +45,121 @@
             ]
           }
         }
-      ]
+      ],
+      "childGroup": {
+        "indicator": "sequence",
+        "children": [
+          {
+            "name": "poller",
+            "occurrence": {
+              "min": 0,
+              "max": 1
+            },
+            "description": "Defines the configuration metadata for a poller.",
+            "attributes": [
+              {
+                "name": "fixed-delay",
+                "type": "number",
+                "description": "Fixed delay trigger (in milliseconds)."
+              }
+            ],
+            "childGroup": {
+              "indicator": "sequence",
+              "children": [
+                {
+                  "name": "transactional",
+                  "attributes": [
+                    {
+                      "name": "propagation",
+                      "type": "string",
+                      "default": "REQUIRED",
+                      "restriction": {
+                        "type": "enum",
+                        "values": [
+                          "REQUIRED",
+                          "SUPPORTS",
+                          "NEVER"
+                        ]
+                      }
+                    }
+                  ],
+                  "occurrence": {
+                    "min": 0,
+                    "max": 1
+                  }
+                },
+                {
+                  "name": "advice-chain",
+                  "occurrence": {
+                    "min": 0,
+                    "max": 1
+                  },
+                  "childGroup": {
+                    "indicator": "sequence",
+                    "children": [
+                      {
+                        "name": "ref",
+                        "occurrence": {
+                          "min": 0,
+                          "max": -1
+                        },
+                        "attributes": [
+                          {
+                            "name": "bean",
+                            "type": "string",
+                            "required": true
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "expression",
+            "occurrence": {
+              "min": 0,
+              "max": 1
+            },
+            "attributes": [
+              {
+                "name": "key",
+                "type": "string",
+                "description": "The key for retrieving the expression from an ExpressionSource.",
+                "required": true
+              },
+              {
+                "name": "source",
+                "type": "string",
+                "default": "expressionSource",
+                "description": "The reference to an ExpressionSource."
+              }
+            ]
+          },
+          {
+            "name": "header",
+            "occurrence": {
+              "min": 0,
+              "max": -1
+            },
+            "attributes": [
+              {
+                "name": "name",
+                "type": "string",
+                "description": "The name of the header",
+                "required": true
+              },
+              {
+                "name": "value",
+                "type": "string",
+                "description": "The value of the header. Either this or 'expression' must be provided."
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "name": "sample-filter",
@@ -104,7 +218,169 @@
             ]
           }
         }
-      ]
+      ],
+      "childGroup": {
+        "indicator": "sequence",
+        "children": [
+          {
+            "name": "poller",
+            "occurrence": {
+              "min": 0,
+              "max": 2
+            },
+            "description": "Defines the configuration metadata for a poller.",
+            "attributes": [
+              {
+                "name": "fixed-delay",
+                "type": "number",
+                "description": "Fixed delay trigger (in milliseconds)."
+              }
+            ],
+            "childGroup": {
+              "indicator": "sequence",
+              "children": [
+                {
+                  "name": "transactional",
+                  "attributes": [
+                    {
+                      "name": "propagation",
+                      "type": "string",
+                      "default": "REQUIRED",
+                      "restriction": {
+                        "type": "enum",
+                        "values": [
+                          "REQUIRED",
+                          "SUPPORTS",
+                          "NEVER"
+                        ]
+                      }
+                    }
+                  ],
+                  "occurrence": {
+                    "min": 0,
+                    "max": 1
+                  }
+                },
+                {
+                  "name": "advice-chain",
+                  "occurrence": {
+                    "min": 0,
+                    "max": 1
+                  },
+                  "childGroup": {
+                    "indicator": "sequence",
+                    "children": [
+                      {
+                        "name": "ref",
+                        "occurrence": {
+                          "min": 0,
+                          "max": -1
+                        },
+                        "attributes": [
+                          {
+                            "name": "bean",
+                            "type": "string",
+                            "required": true
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "expression",
+            "occurrence": {
+              "min": 0,
+              "max": 2
+            },
+            "attributes": [
+              {
+                "name": "key",
+                "type": "string",
+                "description": "The key for retrieving the expression from an ExpressionSource.",
+                "required": true
+              },
+              {
+                "name": "source",
+                "type": "string",
+                "default": "expressionSource",
+                "description": "The reference to an ExpressionSource."
+              }
+            ]
+          },
+          {
+            "name": "transactional",
+            "attributes": [
+              {
+                "name": "propagation",
+                "type": "string",
+                "default": "REQUIRED",
+                "restriction": {
+                  "type": "enum",
+                  "values": [
+                    "REQUIRED",
+                    "SUPPORTS",
+                    "NEVER"
+                  ]
+                }
+              }
+            ],
+            "occurrence": {
+              "min": 0,
+              "max": 1
+            }
+          },
+          {
+            "name": "handler-advice-chain",
+            "occurrence": {
+              "min": 0,
+              "max": 1
+            },
+            "attributes": [
+              {
+                "name": "discard-within-advice",
+                "type": "string",
+                "default": "true"
+              }
+            ],
+            "childGroup": {
+              "indicator": "sequence",
+              "children": [
+                {
+                  "name": "ref",
+                  "occurrence": {
+                    "min": 0,
+                    "max": -1
+                  },
+                  "attributes": [
+                    {
+                      "name": "bean",
+                      "type": "string",
+                      "required": true
+                    }
+                  ]
+                },
+                {
+                  "name": "retry-advice",
+                  "occurrence": {
+                    "min": 0,
+                    "max": -1
+                  },
+                  "attributes": [
+                    {
+                      "name": "max-attempts",
+                      "type": "string"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
 }

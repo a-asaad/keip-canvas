@@ -16,6 +16,11 @@ public record ChildGroup(Indicator indicator, Occurrence occurrence, List<ChildC
   }
 
   @Override
+  public Occurrence occurrence() {
+    return this.occurrence == null ? Occurrence.DEFAULT_OCCURRENCE : this.occurrence;
+  }
+
+  @Override
   public ChildComposite withOccurrence(Occurrence occurrence) {
     return new ChildGroup(this.indicator, occurrence, this.children);
   }

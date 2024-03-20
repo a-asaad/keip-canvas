@@ -24,15 +24,11 @@ public class XmlAttributeTranslator {
 
     Attribute.Builder builder =
         new Attribute.Builder(attribute.getName(), getType(typeInfo))
+            .description(AnnotationTranslator.getDescription(attribute))
             .defaultValue(attribute.getDefaultValue());
 
     if (XmlSchemaUse.REQUIRED.equals(attribute.getUse())) {
       builder.required(true);
-    }
-
-    String description = AnnotationTranslator.getDescription(attribute.getAnnotation());
-    if (!description.isBlank()) {
-      builder.description(description);
     }
 
     Restriction restriction = getRestriction(typeInfo);

@@ -10,8 +10,10 @@ import com.octo.keip.schema.model.eip.EipChildElement
 import com.octo.keip.schema.model.eip.EipComponent
 import com.octo.keip.schema.model.eip.EipElement
 import com.octo.keip.schema.model.eip.EipSchema
+import com.octo.keip.schema.model.eip.Occurrence
 import com.octo.keip.schema.model.eip.Restriction
 import com.octo.keip.schema.serdes.ChildCompositeDeserializer
+import com.octo.keip.schema.serdes.OccurrenceDeserializer
 import com.octo.keip.schema.serdes.RestrictionDeserializer
 import spock.lang.Specification
 
@@ -26,9 +28,9 @@ class SchemaToModelTest extends Specification {
 
     void setupSpec() {
         testXmlReader = getSchemaFileReader("sample.xml")
-//        sampleEipSchema = importEipSchema("eipSample.json")
+        sampleEipSchema = importEipSchema("eipSample.json")
 //        testXmlReader = getSchemaFileReader("tmp/spring-integration-5.2.xsd")
-        sampleEipSchema = importEipSchema("/tmp/minimal-schema.json")
+//        sampleEipSchema = importEipSchema("/tmp/minimal-schema.json")
     }
 
     def "Check fully translated EIP JSON Schema"() {
@@ -86,7 +88,7 @@ class SchemaToModelTest extends Specification {
                     expected.getAttributes(),
                     actual.getAttributes(),
                     Comparator.comparing(Attribute::name),
-                    { a, b -> assert a == b },
+                    { exp, act -> assert exp == act },
                     String.format(
                             "Comparing EIP Component Attributes (component: %s)", expected.getName()))
             assertEipChildGroupsEqual(expected.getChildGroup(), actual.getChildGroup())
@@ -131,7 +133,7 @@ class SchemaToModelTest extends Specification {
                     expected.getAttributes(),
                     actual.getAttributes(),
                     Comparator.comparing(Attribute::name),
-                    { a, b -> assert a == b },
+                    { exp, act -> assert exp == act },
                     String.format("Comparing child elements (child-name: %s)", expected.getName()))
             assertEipChildGroupsEqual(expected.getChildGroup(), actual.getChildGroup())
         }
@@ -159,6 +161,7 @@ class SchemaToModelTest extends Specification {
         var gson = new GsonBuilder();
         gson.registerTypeAdapter(Restriction.class, new RestrictionDeserializer());
         gson.registerTypeAdapter(ChildComposite.class, new ChildCompositeDeserializer());
+        gson.registerTypeAdapter(Occurrence.class, new OccurrenceDeserializer());
         return gson.create();
     }
 }

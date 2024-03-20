@@ -16,8 +16,9 @@ public final class EipChildElement extends EipElement implements ChildComposite 
     this.setChildGroup(child);
   }
 
+  @Override
   public Occurrence occurrence() {
-    return occurrence;
+    return this.occurrence == null ? Occurrence.DEFAULT_OCCURRENCE : this.occurrence;
   }
 
   @Override

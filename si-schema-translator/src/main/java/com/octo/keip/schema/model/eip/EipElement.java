@@ -44,6 +44,11 @@ public abstract class EipElement {
     this.attributes.add(attribute);
   }
 
+  @Override
+  public String toString() {
+    return this.name;
+  }
+
   // Effective Java - Hierarchical builder pattern
   protected abstract static class Builder<T extends Builder<T>> {
 
