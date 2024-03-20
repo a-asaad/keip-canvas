@@ -67,7 +67,10 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
     ChildComposite element;
     if (visited) {
-      element = childElements.get(xmlSchemaElement.getQName());
+      element =
+          childElements
+              .get(xmlSchemaElement.getQName())
+              .withOccurrence(getOccurrence(xmlSchemaElement));
     } else {
       element =
           new EipChildElement.Builder(xmlSchemaElement.getName())
@@ -175,8 +178,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   private Occurrence getOccurrence(XmlSchemaParticle particle) {
     long max = particle.getMaxOccurs() == Long.MAX_VALUE ? -1 : particle.getMaxOccurs();
-    var occurrence = new Occurrence(particle.getMinOccurs(), max);
-    return occurrence.isDefault() ? null : occurrence;
+    return new Occurrence(particle.getMinOccurs(), max);
   }
 
   private record ChildCompositeWrapper(ChildComposite wrappedChild, ChildCompositeWrapper parent) {}
@@ -186,13 +188,17 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
     System.out.print(indentation);
 
     List<ChildComposite> children = Collections.emptyList();
+
     if (child instanceof EipChildElement element) {
-      System.out.println(element.getName());
+      System.out.printf(
+          "%s (%d, %d)%n",
+          element.getName(), element.occurrence().min(), element.occurrence().max());
       if (element.getChildGroup() != null) {
         children = ((ChildGroup) element.getChildGroup()).children();
       }
     } else if (child instanceof ChildGroup group) {
-      System.out.println(group.indicator());
+      System.out.printf(
+          "%s (%d, %d)%n", group.indicator(), group.occurrence().min(), group.occurrence().max());
       children = group.children();
     }
 

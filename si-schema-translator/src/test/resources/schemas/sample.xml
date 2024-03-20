@@ -16,8 +16,7 @@
             <xsd:sequence>
                 <xsd:choice minOccurs="0" maxOccurs="1">
                     <xsd:sequence>
-<!--                        <xsd:element name="poller" type="basePollerType"/>-->
-                        <xsd:element name="poller" type="xsd:string"/>
+                        <xsd:element name="poller" type="basePollerType"/>
                         <xsd:choice minOccurs="0" maxOccurs="1">
                             <xsd:element name="expression" type="innerExpressionType"/>
                             <xsd:any namespace="##other"/>
@@ -28,9 +27,8 @@
                             <xsd:element name="expression" type="innerExpressionType"/>
                             <xsd:any namespace="##other"/>
                         </xsd:choice>
-<!--                        <xsd:element name="poller" type="basePollerType" minOccurs="0"-->
-<!--                                     maxOccurs="1"/>-->
-                        <xsd:element name="poller" type="xsd:string"/>
+                        <xsd:element name="poller" type="basePollerType" minOccurs="0"
+                                     maxOccurs="1"/>
                     </xsd:sequence>
                 </xsd:choice>
                 <xsd:element name="header" type="headerSubElementType" minOccurs="0"

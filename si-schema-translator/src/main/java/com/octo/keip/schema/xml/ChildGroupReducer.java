@@ -4,6 +4,7 @@ import com.octo.keip.schema.model.eip.ChildComposite;
 import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipChildElement;
 import com.octo.keip.schema.model.eip.Indicator;
+import com.octo.keip.schema.model.eip.Occurrence;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -25,11 +26,11 @@ public class ChildGroupReducer {
       case null -> null;
       case EipChildElement element -> {
         ChildComposite group = reduce(element.getChildGroup());
-        yield reduce(element.copyWith(group));
+        yield reduce(element.withChildGroup(group));
       }
       case ChildGroup group -> {
         List<ChildComposite> children = group.children().stream().map(this::reduce).toList();
-        yield reduce(group.copyWith(children));
+        yield reduce(group.withChildren(children));
       }
     };
   }
@@ -38,6 +39,7 @@ public class ChildGroupReducer {
     return element;
   }
 
+  // TODO: Add comments explaining the different reducers.
   private ChildComposite reduce(ChildGroup group) {
     List<UnaryOperator<ChildGroup>> reducers =
         List.of(
@@ -73,7 +75,7 @@ public class ChildGroupReducer {
             .filter(Objects::nonNull)
             .toList();
 
-    return group.copyWith(deDuplicated);
+    return group.withChildren(deDuplicated);
   }
 
   //   Remove adjacent groups with the same (possibly in a different order) child elements
@@ -85,7 +87,7 @@ public class ChildGroupReducer {
             .filter(
                 child ->
                     switch (child) {
-                      case EipChildElement element -> true;
+                      case EipChildElement ignored -> true;
                       case ChildGroup cg -> {
                         if (allChildrenAreElements(cg)) {
                           String combinedChildNames = concatChildNames(cg);
@@ -96,7 +98,7 @@ public class ChildGroupReducer {
                     })
             .toList();
 
-    return group.copyWith(reducedChildren);
+    return group.withChildren(reducedChildren);
   }
 
   // TODO: Account for occurrence
@@ -109,7 +111,7 @@ public class ChildGroupReducer {
                       case EipChildElement element -> element;
                       case ChildGroup cg -> {
                         if (cg.children().size() == 1) {
-                          yield cg.children().getFirst();
+                          yield cg.children().getFirst().withOccurrence(cg.occurrence());
                         } else {
                           yield cg;
                         }
@@ -117,7 +119,7 @@ public class ChildGroupReducer {
                     })
             .toList();
 
-    return group.copyWith(reducedChildren);
+    return group.withChildren(reducedChildren);
   }
 
   // TODO: Account for occurrence
@@ -131,7 +133,7 @@ public class ChildGroupReducer {
                       case ChildGroup cg -> {
                         if (isReducibleIndicator(cg.indicator())
                             && cg.indicator().equals(group.indicator())) {
-                          yield cg.children().stream();
+                          yield cg.children().stream().map(c -> this.relaxOccurrence(c, cg));
                         } else {
                           yield Stream.of(cg);
                         }
@@ -139,11 +141,17 @@ public class ChildGroupReducer {
                     })
             .toList();
 
-    return group.copyWith(reducedChildren);
+    return group.withChildren(reducedChildren);
   }
 
   private boolean isReducibleIndicator(Indicator indicator) {
     return !Indicator.CHOICE.equals(indicator);
+  }
+
+  private ChildComposite relaxOccurrence(ChildComposite composite, ChildComposite parent) {
+    long min = Math.min(composite.occurrence().min(), parent.occurrence().min());
+    long max = Math.max(composite.occurrence().max(), parent.occurrence().max());
+    return composite.withOccurrence(new Occurrence(min, max));
   }
 
   private String concatChildNames(ChildGroup group) {

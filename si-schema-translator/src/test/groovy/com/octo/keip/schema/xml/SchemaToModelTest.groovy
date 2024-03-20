@@ -27,6 +27,7 @@ class SchemaToModelTest extends Specification {
     void setupSpec() {
         testXmlReader = getSchemaFileReader("sample.xml")
 //        sampleEipSchema = importEipSchema("eipSample.json")
+//        testXmlReader = getSchemaFileReader("tmp/spring-integration-5.2.xsd")
         sampleEipSchema = importEipSchema("/tmp/minimal-schema.json")
     }
 

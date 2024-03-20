@@ -15,12 +15,12 @@ public record ChildGroup(Indicator indicator, Occurrence occurrence, List<ChildC
     children.add(child);
   }
 
-  // TODO: Remove
-  public ChildGroup childlessCopy() {
-    return new ChildGroup(this.indicator, this.occurrence, new ArrayList<>());
+  @Override
+  public ChildComposite withOccurrence(Occurrence occurrence) {
+    return new ChildGroup(this.indicator, occurrence, this.children);
   }
 
-  public ChildGroup copyWith(List<ChildComposite> children) {
+  public ChildGroup withChildren(List<ChildComposite> children) {
     return new ChildGroup(this.indicator, this.occurrence, children);
   }
 }

@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public final class EipChildElement extends EipElement implements ChildComposite {
 
-  private final Occurrence occurrence;
+  private Occurrence occurrence;
 
   private EipChildElement(Builder builder) {
     super(builder);
@@ -20,17 +20,14 @@ public final class EipChildElement extends EipElement implements ChildComposite 
     return occurrence;
   }
 
-  // TODO: Remove
-  public EipChildElement childlessCopy() {
-    return new Builder(this.name)
-        .description(this.description)
-        .attributes(this.attributes)
-        .occurrence(this.occurrence)
-        .build();
+  @Override
+  public ChildComposite withOccurrence(Occurrence occurrence) {
+    this.occurrence = occurrence;
+    return this;
   }
 
   // TODO: Create a builder constructor that takes an element?
-  public EipChildElement copyWith(ChildComposite child) {
+  public EipChildElement withChildGroup(ChildComposite child) {
     var element =
         new Builder(this.name)
             .description(this.description)
