@@ -10,7 +10,7 @@ import com.octo.keip.schema.model.eip.Indicator;
 import com.octo.keip.schema.model.eip.Occurrence;
 import com.octo.keip.schema.model.eip.Role;
 import com.octo.keip.schema.xml.attribute.XmlAttributeTranslator;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,8 +177,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   }
 
   private Occurrence getOccurrence(XmlSchemaParticle particle) {
-    long max = particle.getMaxOccurs() == Long.MAX_VALUE ? -1 : particle.getMaxOccurs();
-    return new Occurrence(particle.getMinOccurs(), max);
+    return new Occurrence(particle.getMinOccurs(), particle.getMaxOccurs());
   }
 
   private record ChildCompositeWrapper(ChildComposite wrappedChild, ChildCompositeWrapper parent) {}
@@ -187,19 +186,19 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   public static void printTree(ChildComposite child, String indentation) {
     System.out.print(indentation);
 
-    List<ChildComposite> children = Collections.emptyList();
+    List<ChildComposite> children = new ArrayList<>();
+
+    var minOccur = child.occurrence().min();
+    var maxOccur = child.occurrence().max() == Occurrence.UNBOUNDED ? -1 : child.occurrence().max();
 
     if (child instanceof EipChildElement element) {
-      System.out.printf(
-          "%s (%d, %d)%n",
-          element.getName(), element.occurrence().min(), element.occurrence().max());
+      System.out.printf("%s (%d, %d)%n", element.getName(), minOccur, maxOccur);
       if (element.getChildGroup() != null) {
-        children = ((ChildGroup) element.getChildGroup()).children();
+        children.add(element.getChildGroup());
       }
     } else if (child instanceof ChildGroup group) {
-      System.out.printf(
-          "%s (%d, %d)%n", group.indicator(), group.occurrence().min(), group.occurrence().max());
-      children = group.children();
+      System.out.printf("%s (%d, %d)%n", group.indicator(), minOccur, maxOccur);
+      children.addAll(group.children());
     }
 
     for (var c : children) {

@@ -97,7 +97,7 @@
                 <xsd:sequence>
                     <xsd:element name="transactional" type="transactionalType" minOccurs="0"
                                  maxOccurs="1"/>
-                    <xsd:element name="advice-chain" minOccurs="0" maxOccurs="1">
+                    <xsd:element name="handler-advice-chain" minOccurs="0" maxOccurs="1">
                         <xsd:complexType>
                             <xsd:complexContent>
                                 <xsd:extension base="handlerAdviceChainType">

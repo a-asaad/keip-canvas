@@ -43,9 +43,10 @@ public class ChildGroupReducer {
     List<UnaryOperator<ChildGroup>> reducers =
         List.of(
             this::removeRedundantGroups,
-            this::reduceSingleChildGroup,
-            this::combineSameIndicatorGroups,
-            this::deDuplicateElements);
+            this::collapseSingleChildGroup,
+            this::collapseSameIndicatorGroups,
+            this::deDuplicateElements,
+            this::collapseChoiceGroups);
 
     ChildGroup reduced = group;
     for (var r : reducers) {
@@ -111,7 +112,7 @@ public class ChildGroupReducer {
    *
    * <p>Example: Sequence(Choice(child1)) -> Sequence(child1)
    */
-  private ChildGroup reduceSingleChildGroup(ChildGroup group) {
+  private ChildGroup collapseSingleChildGroup(ChildGroup group) {
     List<ChildComposite> reducedChildren =
         group.children().stream()
             .map(
@@ -137,7 +138,7 @@ public class ChildGroupReducer {
    *
    * <p>Example: Sequence(Sequence(child1, child2)) -> Sequence(child1, child2)
    */
-  private ChildGroup combineSameIndicatorGroups(ChildGroup group) {
+  private ChildGroup collapseSameIndicatorGroups(ChildGroup group) {
     List<ChildComposite> reducedChildren =
         group.children().stream()
             .flatMap(
@@ -158,6 +159,35 @@ public class ChildGroupReducer {
     return group.withChildren(reducedChildren);
   }
 
+  /**
+   * Remove any choice groups and move the children up to the choice groups' parents. The min
+   * occurrence for the moved children is relaxed to zero, making each child optional.
+   *
+   * <p>Warning: This simplification may be too relaxed, will likely need to revisit at some point.
+   *
+   * <p>Example: Sequence(Choice(child1, child2)) -> Sequence(child1[min=0], child2[min=0])
+   */
+  private ChildGroup collapseChoiceGroups(ChildGroup group) {
+    List<ChildComposite> reducedChildren =
+        group.children().stream()
+            .flatMap(
+                child ->
+                    switch (child) {
+                      case EipChildElement element -> Stream.of(element);
+                      case ChildGroup cg -> {
+                        if (Indicator.CHOICE.equals(cg.indicator())) {
+                          yield cg.children().stream()
+                              .map(c -> this.inheritOccurrenceFromChoice(c, cg));
+                        } else {
+                          yield Stream.of(cg);
+                        }
+                      }
+                    })
+            .toList();
+
+    return group.withChildren(reducedChildren);
+  }
+
   private boolean isReducibleIndicator(Indicator indicator) {
     return !Indicator.CHOICE.equals(indicator);
   }
@@ -166,6 +196,12 @@ public class ChildGroupReducer {
     long min = Math.min(composite.occurrence().min(), parent.occurrence().min());
     long max = Math.max(composite.occurrence().max(), parent.occurrence().max());
     return composite.withOccurrence(new Occurrence(min, max));
+  }
+
+  private ChildComposite inheritOccurrenceFromChoice(
+      ChildComposite composite, ChildComposite group) {
+    long max = Math.max(composite.occurrence().max(), group.occurrence().max());
+    return composite.withOccurrence(new Occurrence(0, max));
   }
 
   private String concatChildNames(ChildGroup group) {
