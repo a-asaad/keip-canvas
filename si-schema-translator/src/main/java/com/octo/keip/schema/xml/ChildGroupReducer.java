@@ -39,7 +39,6 @@ public class ChildGroupReducer {
     return element;
   }
 
-  // TODO: Add comments explaining the different reducers.
   private ChildComposite reduce(ChildGroup group) {
     List<UnaryOperator<ChildGroup>> reducers =
         List.of(
@@ -56,7 +55,7 @@ public class ChildGroupReducer {
     return reduced;
   }
 
-  // Remove duplicated elements in a child group
+  /** Remove any duplicate (by name) element siblings in a child group. */
   private ChildGroup deDuplicateElements(ChildGroup group) {
     Set<String> names = new HashSet<>();
     List<ChildComposite> deDuplicated =
@@ -78,7 +77,13 @@ public class ChildGroupReducer {
     return group.withChildren(deDuplicated);
   }
 
-  //   Remove adjacent groups with the same (possibly in a different order) child elements
+  /**
+   * If multiple sibling groups have the same indicator and set of children (in any order), keep
+   * just one group and remove the rest.
+   *
+   * <p>Example: Sequence(Sequence(child1, child2), Sequence(child2, child1)) ->
+   * Sequence(Sequence(child1, child2))
+   */
   private ChildGroup removeRedundantGroups(ChildGroup group) {
     Set<String> elementNames = new HashSet<>();
 
@@ -101,7 +106,11 @@ public class ChildGroupReducer {
     return group.withChildren(reducedChildren);
   }
 
-  // TODO: Account for occurrence
+  /**
+   * If a group has a single child, move the child up to the group's parent.
+   *
+   * <p>Example: Sequence(Choice(child1)) -> Sequence(child1)
+   */
   private ChildGroup reduceSingleChildGroup(ChildGroup group) {
     List<ChildComposite> reducedChildren =
         group.children().stream()
@@ -122,7 +131,12 @@ public class ChildGroupReducer {
     return group.withChildren(reducedChildren);
   }
 
-  // TODO: Account for occurrence
+  /**
+   * If parent and child groups have the same indicator, the child is removed from the tree and the
+   * parent inherits its ancestors.
+   *
+   * <p>Example: Sequence(Sequence(child1, child2)) -> Sequence(child1, child2)
+   */
   private ChildGroup combineSameIndicatorGroups(ChildGroup group) {
     List<ChildComposite> reducedChildren =
         group.children().stream()
@@ -155,16 +169,18 @@ public class ChildGroupReducer {
   }
 
   private String concatChildNames(ChildGroup group) {
-    return group.children().stream()
-        .map(
-            child ->
-                switch (child) {
-                  case EipChildElement element -> element.getName();
-                  case ChildGroup ignored -> null;
-                })
-        .filter(Objects::nonNull)
-        .sorted()
-        .collect(Collectors.joining(""));
+    String childNames =
+        group.children().stream()
+            .map(
+                child ->
+                    switch (child) {
+                      case EipChildElement element -> element.getName();
+                      case ChildGroup ignored -> null;
+                    })
+            .filter(Objects::nonNull)
+            .sorted()
+            .collect(Collectors.joining(""));
+    return group.indicator().name() + ":" + childNames;
   }
 
   private boolean allChildrenAreElements(ChildGroup cg) {
