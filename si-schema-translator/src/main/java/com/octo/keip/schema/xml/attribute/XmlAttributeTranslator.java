@@ -20,7 +20,9 @@ public class XmlAttributeTranslator {
 
     // TODO: review asserts
     assert !XmlSchemaUse.PROHIBITED.equals(attribute.getUse());
-    assert !typeInfo.isMixed();
+    if (typeInfo != null) {
+      assert !typeInfo.isMixed();
+    }
 
     Attribute.Builder builder =
         new Attribute.Builder(attribute.getName(), getType(typeInfo))
@@ -40,6 +42,10 @@ public class XmlAttributeTranslator {
   }
 
   private AttributeType getType(XmlSchemaTypeInfo typeInfo) {
+    if (typeInfo == null) {
+      return toAttributeType(XmlSchemaBaseSimpleType.STRING);
+    }
+
     return switch (typeInfo.getType()) {
       case LIST -> throw new IllegalStateException("TODO: Figure out how to handle list types");
       case UNION -> resolveUnionType(typeInfo);
@@ -69,6 +75,10 @@ public class XmlAttributeTranslator {
   }
 
   private Restriction getRestriction(XmlSchemaTypeInfo typeInfo) {
+    if (typeInfo == null) {
+      return null;
+    }
+
     List<String> enumRestrictions = getEnumRestrictions(typeInfo);
     if (!enumRestrictions.isEmpty()) {
       return new Restriction.MultiValuedRestriction(

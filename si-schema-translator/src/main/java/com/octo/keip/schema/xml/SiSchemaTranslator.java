@@ -4,7 +4,7 @@ import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipSchema;
 import com.octo.keip.schema.xml.visitor.EipTranslationVisitor;
-import java.io.Reader;
+import java.util.Set;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
@@ -13,14 +13,13 @@ import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
 // TODO: Add some comments
 public class SiSchemaTranslator {
 
-  private static final String DEFAULT_NAMESPACE_URI = "http://www.example.com/schema/default";
+  // TODO: Pass in as a ctor arg
+  private final Set<String> EXCLUDED_COMPONENTS = Set.of("selector-chain");
 
   private final ChildGroupReducer groupReducer = new ChildGroupReducer();
 
-  public EipSchema apply(String namespace, Reader xmlReader) {
-    var schemaCol = new XmlSchemaCollection();
-    XmlSchema xmlSchema = schemaCol.read(xmlReader);
-    return translate(namespace, schemaCol, xmlSchema);
+  public EipSchema apply(String namespace, XmlSchemaCollection schemaCollection, XmlSchema target) {
+    return translate(namespace, schemaCollection, target);
   }
 
   // TODO: Refactor
@@ -34,6 +33,10 @@ public class SiSchemaTranslator {
 
     for (XmlSchemaElement element : xmlSchema.getElements().values()) {
 
+      if (EXCLUDED_COMPONENTS.contains(element.getName())) {
+        continue;
+      }
+
       // TODO: Should visitor be reset instead of created everytime?
       // TODO: Should walker be cleared?
       eipVisitor.reset();
@@ -42,13 +45,14 @@ public class SiSchemaTranslator {
       EipComponent.Builder eipComponentBuilder = eipVisitor.getEipComponent();
 
       ChildGroup reduced = groupReducer.reduceGroup(eipComponentBuilder.build().getChildGroup());
+      eipSchema.addComponent(namespace, eipComponentBuilder.childGroup(reduced).build());
 
       // TODO: Remove
       //      System.out.println("Component: " + element.getName());
       //      EipTranslationVisitor.printTree(reduced, "");
       //      System.out.println();
 
-      eipSchema.addComponent(namespace, eipComponentBuilder.childGroup(reduced).build());
+      //      eipSchema.addComponent(namespace, eipComponentBuilder.build());
     }
 
     // getParticle -> XmlSchemaParticle

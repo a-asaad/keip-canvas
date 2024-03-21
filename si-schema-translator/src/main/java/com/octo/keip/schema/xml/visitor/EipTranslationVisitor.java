@@ -33,7 +33,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   private final XmlAttributeTranslator attributeTranslator;
 
-  private final Map<QName, ChildComposite> childElements;
+  private final Map<QName, ChildComposite> discoveredElements;
 
   private EipComponent.Builder eipComponentBuilder;
 
@@ -41,7 +41,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   public EipTranslationVisitor() {
     this.attributeTranslator = new XmlAttributeTranslator();
-    childElements = new HashMap<>();
+    discoveredElements = new HashMap<>();
   }
 
   // TODO: Return EipComponent instead of builder
@@ -69,16 +69,15 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
     ChildComposite element;
     if (visited) {
-      element =
-          childElements
-              .get(xmlSchemaElement.getQName())
-              .withOccurrence(getOccurrence(xmlSchemaElement));
+      element = discoveredElements.get(getKey(xmlSchemaElement));
+      element = element.withOccurrence(getOccurrence(xmlSchemaElement));
     } else {
       element =
           new EipChildElement.Builder(xmlSchemaElement.getName())
               .occurrence(getOccurrence(xmlSchemaElement))
               .description(AnnotationTranslator.getDescription(xmlSchemaElement))
               .build();
+      discoveredElements.putIfAbsent(getKey(xmlSchemaElement), element);
     }
 
     var wrapper = new ChildCompositeWrapper(element, currElement);
@@ -88,11 +87,10 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onExitElement(
-      XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
+      XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean visited) {
     if (xmlSchemaElement.isTopLevel()) {
       return;
     }
-    childElements.put(xmlSchemaElement.getQName(), currElement.wrappedChild);
     exitNode();
   }
 
@@ -184,6 +182,11 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   }
 
   private record ChildCompositeWrapper(ChildComposite wrappedChild, ChildCompositeWrapper parent) {}
+
+  private QName getKey(XmlSchemaElement element) {
+    QName qName = element.getSchemaTypeName();
+    return qName == null ? element.getQName() : qName;
+  }
 
   // TODO: REMOVE
   public static void printTree(ChildComposite child, String indentation) {

@@ -15,6 +15,7 @@ import com.octo.keip.schema.model.eip.Restriction
 import com.octo.keip.schema.serdes.ChildCompositeDeserializer
 import com.octo.keip.schema.serdes.OccurrenceDeserializer
 import com.octo.keip.schema.serdes.RestrictionDeserializer
+import org.apache.ws.commons.schema.XmlSchemaCollection
 import spock.lang.Specification
 
 import java.util.function.BiConsumer
@@ -27,23 +28,26 @@ class SchemaToModelTest extends Specification {
     private static EipSchema sampleEipSchema
 
     void setupSpec() {
-        testXmlReader = getSchemaFileReader("sample.xml")
+//        testXmlReader = getSchemaFileReader("sample.xml")
+        testXmlReader = getSchemaFileReader("tmp/spring-integration-5.2.xsd")
         sampleEipSchema = importEipSchema("eipSample.json")
-//        testXmlReader = getSchemaFileReader("tmp/spring-integration-5.2.xsd")
 //        sampleEipSchema = importEipSchema("/tmp/minimal-schema.json")
     }
 
     def "Check fully translated EIP JSON Schema"() {
         given:
-        def translator = new SiSchemaTranslator();
+        def translator = new SiSchemaTranslator()
+        def schemaCollection = new XmlSchemaCollection()
+        def integrationSchema = schemaCollection.read(getSchemaFileReader("tmp/spring-integration-5.2.xsd"))
+        schemaCollection.read(getSchemaFileReader("tmp/spring-beans.xsd"))
         when:
-        EipSchema resultSchema = translator.apply("test-namespace", testXmlReader);
+        EipSchema resultSchema = translator.apply("test-namespace", schemaCollection, integrationSchema)
         then:
-        assertSchemasEqual(sampleEipSchema, resultSchema);
+        assertSchemasEqual(sampleEipSchema, resultSchema)
     }
 
     private void assertSchemasEqual(EipSchema expected, EipSchema actual) {
-        def actualMap = actual.toMap();
+        def actualMap = actual.toMap()
         expected
                 .toMap()
                 .each { namespace, expectedComponents ->
@@ -65,7 +69,7 @@ class SchemaToModelTest extends Specification {
             BiConsumer assertion,
             String message) {
         if (expected == null && actual == null) {
-            return;
+            return
         }
 
         assert expected.size() == actual.size(): message
@@ -74,7 +78,7 @@ class SchemaToModelTest extends Specification {
         def actualSort = actual.sort(false, comparator)
 
         for (i in 0..<expected.size()) {
-            assertion.accept(expectedSort[i], actualSort[i]);
+            assertion.accept(expectedSort[i], actualSort[i])
         }
     }
 
@@ -98,7 +102,7 @@ class SchemaToModelTest extends Specification {
     private void assertEipChildGroupsEqual(ChildComposite expected, ChildComposite actual) {
         // TODO: Alternatives to null guard clause
         if (expected == null && actual == null) {
-            return;
+            return
         }
 
         assert expected instanceof ChildGroup
@@ -145,23 +149,23 @@ class SchemaToModelTest extends Specification {
                         Objects.requireNonNull(
                                 SchemaToModelTest.class
                                         .getClassLoader()
-                                        .getResourceAsStream("schemas/" + filename))));
+                                        .getResourceAsStream("schemas/" + filename))))
     }
 
     private static EipSchema importEipSchema(String jsonFilename)
             throws URISyntaxException, IOException {
         String schemaJson = SchemaToModelTest.getClassLoader().getResource("schemas/${jsonFilename}").text
 
-        Gson gson = configureGson();
-        Map<String, List<EipComponent>> eipSchemaMap = gson.fromJson(schemaJson, eipSchemaMapType);
-        return EipSchema.from(eipSchemaMap);
+        Gson gson = configureGson()
+        Map<String, List<EipComponent>> eipSchemaMap = gson.fromJson(schemaJson, eipSchemaMapType)
+        return EipSchema.from(eipSchemaMap)
     }
 
     private static Gson configureGson() {
-        var gson = new GsonBuilder();
-        gson.registerTypeAdapter(Restriction.class, new RestrictionDeserializer());
-        gson.registerTypeAdapter(ChildComposite.class, new ChildCompositeDeserializer());
-        gson.registerTypeAdapter(Occurrence.class, new OccurrenceDeserializer());
-        return gson.create();
+        var gson = new GsonBuilder()
+        gson.registerTypeAdapter(Restriction.class, new RestrictionDeserializer())
+        gson.registerTypeAdapter(ChildComposite.class, new ChildCompositeDeserializer())
+        gson.registerTypeAdapter(Occurrence.class, new OccurrenceDeserializer())
+        return gson.create()
     }
 }
