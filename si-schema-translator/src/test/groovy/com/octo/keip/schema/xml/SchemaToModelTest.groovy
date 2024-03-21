@@ -28,8 +28,8 @@ class SchemaToModelTest extends Specification {
     private static EipSchema sampleEipSchema
 
     void setupSpec() {
-//        testXmlReader = getSchemaFileReader("sample.xml")
-        testXmlReader = getSchemaFileReader("tmp/spring-integration-5.2.xsd")
+        testXmlReader = getSchemaFileReader("sample.xml")
+//        testXmlReader = getSchemaFileReader("tmp/spring-integration-5.2.xsd")
         sampleEipSchema = importEipSchema("eipSample.json")
 //        sampleEipSchema = importEipSchema("/tmp/minimal-schema.json")
     }
@@ -38,7 +38,8 @@ class SchemaToModelTest extends Specification {
         given:
         def translator = new SiSchemaTranslator()
         def schemaCollection = new XmlSchemaCollection()
-        def integrationSchema = schemaCollection.read(getSchemaFileReader("tmp/spring-integration-5.2.xsd"))
+//        def integrationSchema = schemaCollection.read(getSchemaFileReader("tmp/spring-integration-5.2.xsd"))
+        def integrationSchema = schemaCollection.read(testXmlReader)
         schemaCollection.read(getSchemaFileReader("tmp/spring-beans.xsd"))
         when:
         EipSchema resultSchema = translator.apply("test-namespace", schemaCollection, integrationSchema)

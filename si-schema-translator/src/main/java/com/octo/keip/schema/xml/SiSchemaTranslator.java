@@ -1,9 +1,12 @@
 package com.octo.keip.schema.xml;
 
 import com.octo.keip.schema.model.eip.ChildGroup;
+import com.octo.keip.schema.model.eip.EipChildElement;
 import com.octo.keip.schema.model.eip.EipComponent;
+import com.octo.keip.schema.model.eip.EipElement;
 import com.octo.keip.schema.model.eip.EipSchema;
 import com.octo.keip.schema.xml.visitor.EipTranslationVisitor;
+import java.util.Objects;
 import java.util.Set;
 import javax.xml.namespace.QName;
 import org.apache.ws.commons.schema.XmlSchema;
@@ -77,17 +80,16 @@ public class SiSchemaTranslator {
       //      eipSchema.addComponent(namespace, eipComponentBuilder.build());
     }
 
-    // getParticle -> XmlSchemaParticle
-    // getParticle or getContentTypeParticle?
-    // XmlSchemaParticle -> element, group, or groupRef (ignore any?)
-    // getContentModel -> 4 types (simple/complex x extension/restriction)
-    // element -> get info
-    // group -> all, choice, or sequence (handle appropriately)
     // xsd:any (namespace="##other"), most likely refer to beans.
+    assert isTopLevelFreeOfNestedGroups(eipSchema, namespace);
     return eipSchema;
   }
 
-  //  private void isTopLevelNoNestedChildGroups(EipSchema eipSchema, String namespace) {
-  //    eipSchema.toMap().get(namespace).stream().flatMap(component -> component.getChildGroup())
-  //  }
+  private boolean isTopLevelFreeOfNestedGroups(EipSchema eipSchema, String namespace) {
+    return eipSchema.toMap().get(namespace).stream()
+        .map(EipElement::getChildGroup)
+        .filter(Objects::nonNull)
+        .flatMap(group -> group.children().stream())
+        .allMatch(c -> c instanceof EipChildElement);
+  }
 }

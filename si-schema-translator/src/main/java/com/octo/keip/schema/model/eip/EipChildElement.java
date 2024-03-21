@@ -1,5 +1,7 @@
 package com.octo.keip.schema.model.eip;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public final class EipChildElement extends EipElement implements ChildComposite {
@@ -14,6 +16,11 @@ public final class EipChildElement extends EipElement implements ChildComposite 
   @Override
   public void addChild(ChildComposite child) {
     this.setChildGroup(child);
+  }
+
+  @Override
+  public List<ChildComposite> children() {
+    return new ArrayList<>(List.of(this.getChildGroup()));
   }
 
   @Override
