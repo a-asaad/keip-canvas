@@ -14,9 +14,9 @@ class ChildGroupReducerTest extends Specification {
         given:
         def child1 = new EipChildElement.Builder("c1").build()
         def child2 = new EipChildElement.Builder("c2").build()
-        def middle1 = new ChildGroup(Indicator.SEQUENCE, List.of(child1, child2))
-        def middle2 = new ChildGroup(Indicator.SEQUENCE, List.of(child2, child1))
-        def parent = new ChildGroup(Indicator.ALL, List.of(middle1, middle2))
+        def middle1 = new ChildGroup(Indicator.SEQUENCE, [child1, child2])
+        def middle2 = new ChildGroup(Indicator.SEQUENCE, [child2, child1])
+        def parent = new ChildGroup(Indicator.ALL, [middle1, middle2])
 
         when:
         def result = reducer.removeRedundantGroups(parent)
@@ -32,9 +32,9 @@ class ChildGroupReducerTest extends Specification {
         given:
         def child1 = new EipChildElement.Builder("c1").build()
         def child2 = new EipChildElement.Builder("c2").build()
-        def middle1 = new ChildGroup(Indicator.SEQUENCE, List.of(child1, child2))
-        def middle2 = new ChildGroup(Indicator.CHOICE, List.of(child2, child1))
-        def parent = new ChildGroup(Indicator.ALL, List.of(middle1, middle2))
+        def middle1 = new ChildGroup(Indicator.SEQUENCE, [child1, child2])
+        def middle2 = new ChildGroup(Indicator.CHOICE, [child2, child1])
+        def parent = new ChildGroup(Indicator.ALL, [middle1, middle2])
 
         when:
         def result = reducer.removeRedundantGroups(parent)
@@ -47,10 +47,10 @@ class ChildGroupReducerTest extends Specification {
         given:
         def child1 = new EipChildElement.Builder("c1").build()
         def child2 = new EipChildElement.Builder("c2").build()
-        def childGroup = new ChildGroup(Indicator.SEQUENCE, List.of());
-        def middle1 = new ChildGroup(Indicator.SEQUENCE, List.of(child1, child2, childGroup))
-        def middle2 = new ChildGroup(Indicator.SEQUENCE, List.of(child2, child1, childGroup))
-        def parent = new ChildGroup(Indicator.ALL, List.of(middle1, middle2))
+        def childGroup = new ChildGroup(Indicator.SEQUENCE, []);
+        def middle1 = new ChildGroup(Indicator.SEQUENCE, [child1, child2, childGroup])
+        def middle2 = new ChildGroup(Indicator.SEQUENCE, [child2, child1, childGroup])
+        def parent = new ChildGroup(Indicator.ALL, [middle1, middle2])
 
         when:
         def result = reducer.removeRedundantGroups(parent)
@@ -81,8 +81,8 @@ class ChildGroupReducerTest extends Specification {
         given:
         def child1 = new EipChildElement.Builder("c1").build()
         def child2 = new EipChildElement.Builder("c2").build()
-        def middle = new ChildGroup(Indicator.ALL, List.of(child1, child2))
-        def parent = new ChildGroup(Indicator.SEQUENCE, List.of(middle))
+        def middle = new ChildGroup(Indicator.ALL, [child1, child2])
+        def parent = new ChildGroup(Indicator.SEQUENCE, [middle])
 
         when:
         def result = reducer.collapseSingleChildGroup(parent)
@@ -95,8 +95,8 @@ class ChildGroupReducerTest extends Specification {
         given:
         def child1 = new EipChildElement.Builder("c1").occurrence(childOccur).build()
         def child2 = new EipChildElement.Builder("c2").occurrence(childOccur).build()
-        def middle = new ChildGroup(Indicator.SEQUENCE, middleOccur, List.of(child1, child2))
-        def parent = new ChildGroup(Indicator.SEQUENCE, List.of(middle))
+        def middle = new ChildGroup(Indicator.SEQUENCE, middleOccur, [child1, child2])
+        def parent = new ChildGroup(Indicator.SEQUENCE, [middle])
 
         when:
         def result = reducer.collapseSameIndicatorGroups(parent)
@@ -120,8 +120,8 @@ class ChildGroupReducerTest extends Specification {
         given:
         def child1 = new EipChildElement.Builder("c1").build()
         def child2 = new EipChildElement.Builder("c2").build()
-        def middle = new ChildGroup(Indicator.CHOICE, List.of(child1, child2))
-        def parent = new ChildGroup(Indicator.CHOICE, List.of(middle))
+        def middle = new ChildGroup(Indicator.CHOICE, [child1, child2])
+        def parent = new ChildGroup(Indicator.CHOICE, [middle])
 
         when:
         def result = reducer.collapseSameIndicatorGroups(parent)
@@ -135,7 +135,7 @@ class ChildGroupReducerTest extends Specification {
         def child1 = new EipChildElement.Builder("c1").build()
         def child2 = new EipChildElement.Builder("c2").build()
         def child3 = new EipChildElement.Builder("c1").build()
-        def parent = new ChildGroup(Indicator.ALL, List.of(child1, child2, child3))
+        def parent = new ChildGroup(Indicator.ALL, [child1, child2, child3])
 
         when:
         def result = reducer.deDuplicateElements(parent)
@@ -148,8 +148,8 @@ class ChildGroupReducerTest extends Specification {
         given:
         def child1 = new EipChildElement.Builder("c1").occurrence(new Occurrence(1, 2)).build()
         def child2 = new EipChildElement.Builder("c2").occurrence(new Occurrence(1, 2)).build()
-        def middle = new ChildGroup(Indicator.CHOICE, List.of(child1, child2))
-        def parent = new ChildGroup(Indicator.SEQUENCE, List.of(middle))
+        def middle = new ChildGroup(Indicator.CHOICE, [child1, child2])
+        def parent = new ChildGroup(Indicator.SEQUENCE, [middle])
 
         def expectedOccurrence = new Occurrence(0, 2)
 
@@ -160,5 +160,24 @@ class ChildGroupReducerTest extends Specification {
         result.children() == [child1, child2]
         child1.occurrence() == expectedOccurrence
         child1.occurrence() == expectedOccurrence
+    }
+
+    def "Test full child group reduce"() {
+        given:
+        def element1 = new EipChildElement.Builder("c1").build()
+        def element2 = new EipChildElement.Builder("c2").build()
+        def element3 = new EipChildElement.Builder("c3").build()
+        def element4 = new EipChildElement.Builder("c4").build()
+        def group1 = new ChildGroup(Indicator.SEQUENCE, [element1, element2])
+        def group2 = new ChildGroup(Indicator.SEQUENCE, [element2, element1])
+        def group3 = new ChildGroup(Indicator.CHOICE, [element3])
+        def group4 = new ChildGroup(Indicator.SEQUENCE, [element4])
+        def top = new ChildGroup(Indicator.SEQUENCE, [group1, group2, group3, group4, element2])
+
+        when:
+        def result = reducer.reduceGroup(top)
+
+        then:
+        result.children().collect { it.getName() } == ["c1", "c2", "c3", "c4"]
     }
 }
