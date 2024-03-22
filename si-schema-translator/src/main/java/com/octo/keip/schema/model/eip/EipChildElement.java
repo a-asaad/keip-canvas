@@ -20,12 +20,12 @@ public final class EipChildElement extends EipElement implements ChildComposite 
 
   @Override
   public List<ChildComposite> children() {
-    return new ArrayList<>(List.of(this.getChildGroup()));
+    return this.getChildGroup() == null ? null : new ArrayList<>(List.of(this.getChildGroup()));
   }
 
   @Override
   public Occurrence occurrence() {
-    return this.occurrence == null ? Occurrence.DEFAULT_OCCURRENCE : this.occurrence;
+    return this.occurrence == null ? Occurrence.DEFAULT : this.occurrence;
   }
 
   @Override

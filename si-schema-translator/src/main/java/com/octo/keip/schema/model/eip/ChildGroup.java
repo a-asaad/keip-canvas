@@ -10,6 +10,10 @@ public record ChildGroup(Indicator indicator, Occurrence occurrence, List<ChildC
     this(indicator, occurrence, new ArrayList<>());
   }
 
+  public ChildGroup(Indicator indicator, List<ChildComposite> children) {
+    this(indicator, null, children);
+  }
+
   @Override
   public void addChild(ChildComposite child) {
     children.add(child);
@@ -17,7 +21,7 @@ public record ChildGroup(Indicator indicator, Occurrence occurrence, List<ChildC
 
   @Override
   public Occurrence occurrence() {
-    return this.occurrence == null ? Occurrence.DEFAULT_OCCURRENCE : this.occurrence;
+    return this.occurrence == null ? Occurrence.DEFAULT : this.occurrence;
   }
 
   @Override

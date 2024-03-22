@@ -89,7 +89,7 @@ public class SiSchemaTranslator {
     return eipSchema.toMap().get(namespace).stream()
         .map(EipElement::getChildGroup)
         .filter(Objects::nonNull)
-        .flatMap(group -> group.children().stream())
+        .flatMap(c -> c.children().stream())
         .allMatch(c -> c instanceof EipChildElement);
   }
 }

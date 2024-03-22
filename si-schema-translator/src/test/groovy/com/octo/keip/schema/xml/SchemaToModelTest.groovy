@@ -20,6 +20,7 @@ import spock.lang.Specification
 
 import java.util.function.BiConsumer
 
+// TODO: Add test code coverage.
 class SchemaToModelTest extends Specification {
 
     private static eipSchemaMapType = new TypeToken<Map<String, List<EipComponent>>>() {}

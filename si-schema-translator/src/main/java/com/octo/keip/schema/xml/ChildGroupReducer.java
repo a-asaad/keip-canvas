@@ -57,7 +57,7 @@ public class ChildGroupReducer {
   }
 
   /** Remove any duplicate (by name) element siblings in a child group. */
-  private ChildGroup deDuplicateElements(ChildGroup group) {
+  ChildGroup deDuplicateElements(ChildGroup group) {
     Set<String> names = new HashSet<>();
     List<ChildComposite> deDuplicated =
         group.children().stream()
@@ -79,13 +79,16 @@ public class ChildGroupReducer {
   }
 
   /**
-   * If multiple sibling groups have the same indicator and set of children (in any order), keep
-   * just one group and remove the rest.
+   * If multiple sibling groups have the same indicator and set of *element* children (in any
+   * order), keep just one group and remove the rest.
+   *
+   * <p>Warning: If the redundant groups have different occurrence values, the occurrence value from
+   * the first group is used.
    *
    * <p>Example: Sequence(Sequence(child1, child2), Sequence(child2, child1)) ->
    * Sequence(Sequence(child1, child2))
    */
-  private ChildGroup removeRedundantGroups(ChildGroup group) {
+  ChildGroup removeRedundantGroups(ChildGroup group) {
     Set<String> elementNames = new HashSet<>();
 
     List<ChildComposite> reducedChildren =
@@ -110,9 +113,9 @@ public class ChildGroupReducer {
   /**
    * If a group has a single child, move the child up to the group's parent.
    *
-   * <p>Example: Sequence(Choice(child1)) -> Sequence(child1)
+   * <p>Example: Sequence(All(child1)) -> Sequence(child1)
    */
-  private ChildGroup collapseSingleChildGroup(ChildGroup group) {
+  ChildGroup collapseSingleChildGroup(ChildGroup group) {
     List<ChildComposite> reducedChildren =
         group.children().stream()
             .map(
@@ -134,11 +137,12 @@ public class ChildGroupReducer {
 
   /**
    * If parent and child groups have the same indicator, the child is removed from the tree and the
-   * parent inherits its ancestors.
+   * parent inherits its ancestors. The moved child will inherit the loosest occurrence values from
+   * the old and new parents (i.e. occurrence=[min=min(old,new), max=max(old,new)])
    *
    * <p>Example: Sequence(Sequence(child1, child2)) -> Sequence(child1, child2)
    */
-  private ChildGroup collapseSameIndicatorGroups(ChildGroup group) {
+  ChildGroup collapseSameIndicatorGroups(ChildGroup group) {
     List<ChildComposite> reducedChildren =
         group.children().stream()
             .flatMap(
@@ -167,7 +171,7 @@ public class ChildGroupReducer {
    *
    * <p>Example: Sequence(Choice(child1, child2)) -> Sequence(child1[min=0], child2[min=0])
    */
-  private ChildGroup collapseChoiceGroups(ChildGroup group) {
+  ChildGroup collapseChoiceGroups(ChildGroup group) {
     List<ChildComposite> reducedChildren =
         group.children().stream()
             .flatMap(
@@ -188,6 +192,7 @@ public class ChildGroupReducer {
     return group.withChildren(reducedChildren);
   }
 
+  // TODO: Is the CHOICE exception still necessary?
   private boolean isReducibleIndicator(Indicator indicator) {
     return !Indicator.CHOICE.equals(indicator);
   }
