@@ -1,5 +1,8 @@
 package com.octo.keip.schema.xml.attribute;
 
+import java.util.Objects;
+import java.util.StringJoiner;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.ws.commons.schema.XmlSchemaAnnotation;
@@ -16,25 +19,29 @@ public class AnnotationTranslator {
   private static final Pattern whitespacePattern = Pattern.compile("\\s+");
 
   public static String getDescription(XmlSchemaElement element) {
-    XmlSchemaAnnotation annotation = element.getAnnotation();
-    if (annotation == null) {
-      annotation = element.getSchemaType().getAnnotation();
+    if (element.getAnnotation() != null) {
+      return getDescription(element.getAnnotation());
     }
-    return getDescription(annotation);
+    if (element.getSchemaType() != null) {
+      return getDescription(element.getSchemaType().getAnnotation());
+    }
+    return null;
   }
 
   public static String getDescription(XmlSchemaAttribute attribute) {
     return getDescription(attribute.getAnnotation());
   }
 
-  // TODO: Handle the appInfo/tool annotations
-  private static String getDescription(XmlSchemaAnnotation annotation) {
+  // TODO: Handle the appInfo/tool ref annotations
+  static String getDescription(XmlSchemaAnnotation annotation) {
     if (annotation != null && annotation.getItems() != null) {
       String result =
           annotation.getItems().stream()
               .map(AnnotationTranslator::getMarkup)
+              .filter(Objects::nonNull)
               .map(AnnotationTranslator::getTextContent)
-              .collect(Collectors.joining(""));
+              .filter(Predicate.not(String::isBlank))
+              .collect(Collectors.joining(" "));
       return result.isBlank() ? null : result;
     }
     return null;
@@ -49,12 +56,12 @@ public class AnnotationTranslator {
   }
 
   private static String getTextContent(NodeList nodeList) {
-    StringBuilder sb = new StringBuilder();
+    var sj = new StringJoiner(" ");
     for (int i = 0; i < nodeList.getLength(); i++) {
       Node node = nodeList.item(i);
       String content = node.getTextContent().trim();
-      sb.append(whitespacePattern.matcher(content).replaceAll(" "));
+      sj.add(whitespacePattern.matcher(content).replaceAll(" "));
     }
-    return sb.toString();
+    return sj.toString();
   }
 }

@@ -20,7 +20,6 @@ import spock.lang.Specification
 
 import java.util.function.BiConsumer
 
-// TODO: Add test code coverage.
 class SchemaToModelTest extends Specification {
 
     private static eipSchemaMapType = new TypeToken<Map<String, List<EipComponent>>>() {}
@@ -42,6 +41,7 @@ class SchemaToModelTest extends Specification {
 //        def integrationSchema = schemaCollection.read(getSchemaFileReader("tmp/spring-integration-5.2.xsd"))
         def integrationSchema = schemaCollection.read(testXmlReader)
         schemaCollection.read(getSchemaFileReader("tmp/spring-beans.xsd"))
+        schemaCollection.read(getSchemaFileReader("tmp/spring-tool.xsd"))
         when:
         EipSchema resultSchema = translator.apply("test-namespace", schemaCollection, integrationSchema)
         then:
