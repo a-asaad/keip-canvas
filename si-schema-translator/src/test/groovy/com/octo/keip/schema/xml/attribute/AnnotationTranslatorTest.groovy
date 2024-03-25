@@ -13,12 +13,14 @@ import spock.lang.Specification
 
 class AnnotationTranslatorTest extends Specification {
 
+    def translator = new AnnotationTranslator();
+
     def "Get description from XmlSchemaElement with null Annotation and SchemaType returns null"() {
         given:
         def element = new XmlSchemaElement(null, false)
 
         when:
-        def description = AnnotationTranslator.getDescription(element)
+        def description = translator.getDescription(element)
 
         then:
         description == null
@@ -30,7 +32,7 @@ class AnnotationTranslatorTest extends Specification {
         element.setSchemaType(new XmlSchemaSimpleType(null, false))
 
         when:
-        def description = AnnotationTranslator.getDescription(element)
+        def description = translator.getDescription(element)
 
         then:
         description == null
@@ -41,7 +43,7 @@ class AnnotationTranslatorTest extends Specification {
         def xmlAttr = new XmlSchemaAttribute(null, false)
 
         when:
-        def description = AnnotationTranslator.getDescription(xmlAttr)
+        def description = translator.getDescription(xmlAttr)
 
         then:
         description == null
@@ -52,7 +54,7 @@ class AnnotationTranslatorTest extends Specification {
         XmlSchemaAnnotation xmlAnnotation = null
 
         expect:
-        AnnotationTranslator.getDescription(xmlAnnotation) == null
+        translator.getDescription(xmlAnnotation) == null
     }
 
     def "Get description from XmlSchemaAnnotation with empty items returns null"() {
@@ -60,7 +62,7 @@ class AnnotationTranslatorTest extends Specification {
         XmlSchemaAnnotation emptyItems = new XmlSchemaAnnotation()
 
         expect:
-        AnnotationTranslator.getDescription(emptyItems) == null
+        translator.getDescription(emptyItems) == null
 
     }
 
@@ -69,7 +71,7 @@ class AnnotationTranslatorTest extends Specification {
         def xmlAnnotation = createDocumentationAnnotation(*annotation)
 
         when:
-        def description = AnnotationTranslator.getDescription(xmlAnnotation)
+        def description = translator.getDescription(xmlAnnotation)
 
         then:
         description == expectedDescription
@@ -90,7 +92,7 @@ class AnnotationTranslatorTest extends Specification {
         def xmlAnnotation = createAppInfoAnnotation(*annotation)
 
         when:
-        def description = AnnotationTranslator.getDescription(xmlAnnotation)
+        def description = translator.getDescription(xmlAnnotation)
 
         then:
         description == expectedDescription
@@ -119,7 +121,7 @@ class AnnotationTranslatorTest extends Specification {
         xmlAnnotation.getItems().addAll(item1, item2, item3)
 
         when:
-        def description = AnnotationTranslator.getDescription(xmlAnnotation)
+        def description = translator.getDescription(xmlAnnotation)
 
         then:
         description == "second appinfo third doc"
@@ -130,7 +132,7 @@ class AnnotationTranslatorTest extends Specification {
         def xmlAnnotation = createDocumentationAnnotation()
 
         when:
-        def description = AnnotationTranslator.getDescription(xmlAnnotation)
+        def description = translator.getDescription(xmlAnnotation)
 
         then:
         description == null
@@ -143,7 +145,7 @@ class AnnotationTranslatorTest extends Specification {
         xmlAnnotation.getItems().add(doc)
 
         when:
-        def description = AnnotationTranslator.getDescription(xmlAnnotation)
+        def description = translator.getDescription(xmlAnnotation)
 
         then:
         description == null
@@ -154,7 +156,7 @@ class AnnotationTranslatorTest extends Specification {
         def xmlAnnotation = createDocumentationAnnotation(annotation)
 
         when:
-        def description = AnnotationTranslator.getDescription(xmlAnnotation)
+        def description = translator.getDescription(xmlAnnotation)
 
         then:
         description == null
@@ -170,7 +172,7 @@ class AnnotationTranslatorTest extends Specification {
         xmlAnnotation.getItems().add(item)
 
         when:
-        AnnotationTranslator.getDescription(xmlAnnotation)
+        translator.getDescription(xmlAnnotation)
 
         then:
         thrown(IllegalStateException)

@@ -18,7 +18,7 @@ public class AnnotationTranslator {
 
   private static final Pattern whitespacePattern = Pattern.compile("\\s+");
 
-  public static String getDescription(XmlSchemaElement element) {
+  public String getDescription(XmlSchemaElement element) {
     if (element.getAnnotation() != null) {
       return getDescription(element.getAnnotation());
     }
@@ -28,18 +28,18 @@ public class AnnotationTranslator {
     return null;
   }
 
-  public static String getDescription(XmlSchemaAttribute attribute) {
+  public String getDescription(XmlSchemaAttribute attribute) {
     return getDescription(attribute.getAnnotation());
   }
 
   // TODO: Handle the appInfo/tool ref annotations
-  static String getDescription(XmlSchemaAnnotation annotation) {
+  String getDescription(XmlSchemaAnnotation annotation) {
     if (annotation != null && annotation.getItems() != null) {
       String result =
           annotation.getItems().stream()
-              .map(AnnotationTranslator::getMarkup)
+              .map(this::getMarkup)
               .filter(Objects::nonNull)
-              .map(AnnotationTranslator::getTextContent)
+              .map(this::getTextContent)
               .filter(Predicate.not(String::isBlank))
               .collect(Collectors.joining(" "));
       return result.isBlank() ? null : result;
@@ -47,7 +47,7 @@ public class AnnotationTranslator {
     return null;
   }
 
-  private static NodeList getMarkup(XmlSchemaAnnotationItem item) {
+  private NodeList getMarkup(XmlSchemaAnnotationItem item) {
     return switch (item) {
       case XmlSchemaAppInfo appInfo -> appInfo.getMarkup();
       case XmlSchemaDocumentation doc -> doc.getMarkup();
@@ -55,7 +55,7 @@ public class AnnotationTranslator {
     };
   }
 
-  private static String getTextContent(NodeList nodeList) {
+  private String getTextContent(NodeList nodeList) {
     var sj = new StringJoiner(" ");
     for (int i = 0; i < nodeList.getLength(); i++) {
       Node node = nodeList.item(i);

@@ -10,7 +10,7 @@ import com.octo.keip.schema.model.eip.Indicator;
 import com.octo.keip.schema.model.eip.Occurrence;
 import com.octo.keip.schema.model.eip.Role;
 import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
-import com.octo.keip.schema.xml.attribute.XmlAttributeTranslator;
+import com.octo.keip.schema.xml.attribute.AttributeTranslator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +31,9 @@ import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
 // TODO: Refactor
 public class EipTranslationVisitor implements XmlSchemaVisitor {
 
-  private final XmlAttributeTranslator attributeTranslator;
+  private final AttributeTranslator attributeTranslator;
+
+  private final AnnotationTranslator annotationTranslator;
 
   private final Map<QName, ChildComposite> discoveredElements;
 
@@ -40,7 +42,8 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   private ChildCompositeWrapper currElement;
 
   public EipTranslationVisitor() {
-    this.attributeTranslator = new XmlAttributeTranslator();
+    this.attributeTranslator = new AttributeTranslator();
+    this.annotationTranslator = new AnnotationTranslator();
     discoveredElements = new HashMap<>();
   }
 
@@ -63,7 +66,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
       // TODO: Figure out how to get flowtype and role.
       eipComponentBuilder =
           new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE)
-              .description(AnnotationTranslator.getDescription(xmlSchemaElement));
+              .description(annotationTranslator.getDescription(xmlSchemaElement));
       return;
     }
 
@@ -75,7 +78,7 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
       element =
           new EipChildElement.Builder(xmlSchemaElement.getName())
               .occurrence(getOccurrence(xmlSchemaElement))
-              .description(AnnotationTranslator.getDescription(xmlSchemaElement))
+              .description(annotationTranslator.getDescription(xmlSchemaElement))
               .build();
       discoveredElements.putIfAbsent(getKey(xmlSchemaElement), element);
     }

@@ -12,21 +12,26 @@ import org.apache.ws.commons.schema.walker.XmlSchemaBaseSimpleType;
 import org.apache.ws.commons.schema.walker.XmlSchemaRestriction;
 import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
 
-public class XmlAttributeTranslator {
+public class AttributeTranslator {
+
+  private final AnnotationTranslator annotationTranslator;
+
+  public AttributeTranslator() {
+    this.annotationTranslator = new AnnotationTranslator();
+  }
+
+  public AttributeTranslator(AnnotationTranslator annotationTranslator) {
+    this.annotationTranslator = annotationTranslator;
+  }
 
   public Attribute translate(XmlSchemaAttrInfo attrInfo) {
+    validateAttributeInfo(attrInfo);
     XmlSchemaAttribute attribute = attrInfo.getAttribute();
     XmlSchemaTypeInfo typeInfo = attrInfo.getType();
 
-    // TODO: review asserts
-    assert !XmlSchemaUse.PROHIBITED.equals(attribute.getUse());
-    if (typeInfo != null) {
-      assert !typeInfo.isMixed();
-    }
-
     Attribute.Builder builder =
         new Attribute.Builder(attribute.getName(), getType(typeInfo))
-            .description(AnnotationTranslator.getDescription(attribute))
+            .description(annotationTranslator.getDescription(attribute))
             .defaultValue(attribute.getDefaultValue());
 
     if (XmlSchemaUse.REQUIRED.equals(attribute.getUse())) {
@@ -51,7 +56,8 @@ public class XmlAttributeTranslator {
       case UNION -> resolveUnionType(typeInfo);
       case ATOMIC -> toAttributeType(typeInfo.getBaseType());
       case COMPLEX ->
-          throw new IllegalStateException("TODO: Is it even possible to have complex attr types?");
+          throw new IllegalStateException(
+              "TODO: Is it even possible to have complex-typed attributes?");
     };
   }
 
@@ -64,9 +70,8 @@ public class XmlAttributeTranslator {
   }
 
   private AttributeType resolveUnionType(XmlSchemaTypeInfo typeInfo) {
-    assert typeInfo.getType().equals(XmlSchemaTypeInfo.Type.UNION);
-    // Take the first type
     for (XmlSchemaTypeInfo childType : typeInfo.getChildTypes()) {
+      // Take the first type
       if (childType.getBaseType() != null) {
         return toAttributeType(childType.getBaseType());
       }
@@ -111,5 +116,20 @@ public class XmlAttributeTranslator {
     }
 
     return restrictions.stream().map(restriction -> restriction.getValue().toString()).toList();
+  }
+
+  private void validateAttributeInfo(XmlSchemaAttrInfo attrInfo) {
+    XmlSchemaAttribute attribute = attrInfo.getAttribute();
+    XmlSchemaTypeInfo typeInfo = attrInfo.getType();
+
+    if (XmlSchemaUse.PROHIBITED.equals(attribute.getUse())) {
+      throw new IllegalArgumentException(
+          "Prohibited use attributes are not supported: " + attribute.getName());
+    }
+
+    if (typeInfo != null && typeInfo.isMixed()) {
+      throw new IllegalArgumentException(
+          "Mixed complex type elements are not supported: " + attribute.getName());
+    }
   }
 }
