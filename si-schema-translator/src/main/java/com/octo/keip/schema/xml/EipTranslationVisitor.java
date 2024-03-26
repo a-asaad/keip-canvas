@@ -39,13 +39,8 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   private ChildCompositeWrapper currElement;
 
   public EipTranslationVisitor() {
-    this(new AttributeTranslator(), new AnnotationTranslator());
-  }
-
-  public EipTranslationVisitor(
-      AttributeTranslator attributeTranslator, AnnotationTranslator annotationTranslator) {
-    this.attributeTranslator = attributeTranslator;
-    this.annotationTranslator = annotationTranslator;
+    this.attributeTranslator = new AttributeTranslator();
+    this.annotationTranslator = new AnnotationTranslator();
     this.visitedElements = new HashMap<>();
   }
 
