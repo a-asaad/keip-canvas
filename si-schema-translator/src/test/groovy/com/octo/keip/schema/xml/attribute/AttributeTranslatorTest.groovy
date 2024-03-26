@@ -13,13 +13,11 @@ import spock.lang.Specification
 
 class AttributeTranslatorTest extends Specification {
 
-    static final TEST_DESCRIPTION = "test-description"
+    static final DESCRIPTION = "test-description"
 
     static final ATTRIBUTE_NAME = "test-attr"
 
-    AnnotationTranslator annotationTranslator = mockAnnotationTranslator(TEST_DESCRIPTION)
-
-    AttributeTranslator attributeTranslator = new AttributeTranslator(annotationTranslator)
+    AttributeTranslator attributeTranslator = new AttributeTranslator(mockAnnotationTranslator(DESCRIPTION))
 
     XmlSchemaAttribute xmlAttribute
 
@@ -67,7 +65,7 @@ class AttributeTranslatorTest extends Specification {
         then:
         attribute.name() == ATTRIBUTE_NAME
         attribute.type() == AttributeType.STRING
-        attribute.description() == TEST_DESCRIPTION
+        attribute.description() == DESCRIPTION
         attribute.defaultValue() == "test-default"
         attribute.required()
         attribute.restriction() == null

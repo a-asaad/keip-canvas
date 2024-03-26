@@ -36,6 +36,12 @@ public final class EipComponent extends EipElement {
       this.flowType = Objects.requireNonNull(flowType);
     }
 
+    public Builder(EipComponent component) {
+      super(component);
+      this.role = component.role;
+      this.flowType = component.flowType;
+    }
+
     @Override
     public EipComponent build() {
       return new EipComponent(this);

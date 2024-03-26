@@ -18,6 +18,7 @@ import com.octo.keip.schema.serdes.RestrictionDeserializer
 import org.apache.ws.commons.schema.XmlSchemaCollection
 import spock.lang.Specification
 
+import java.nio.file.Path
 import java.util.function.BiConsumer
 
 class SchemaToModelTest extends Specification {
@@ -146,12 +147,8 @@ class SchemaToModelTest extends Specification {
     }
 
     private static BufferedReader getSchemaFileReader(String filename) {
-        return new BufferedReader(
-                new InputStreamReader(
-                        Objects.requireNonNull(
-                                SchemaToModelTest.class
-                                        .getClassLoader()
-                                        .getResourceAsStream("schemas/" + filename))))
+        String path = Path.of("schemas", filename).toString()
+        return EipTranslationVisitorTest.class.getClassLoader().getResource(path).newReader()
     }
 
     private static EipSchema importEipSchema(String jsonFilename)

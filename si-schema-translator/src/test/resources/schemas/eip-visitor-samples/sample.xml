@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="test-ns"
+            targetNamespace="test-ns"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+    <xsd:element name="top-level-component">
+        <xsd:annotation>
+            <xsd:documentation>
+                Top Level EIP Component
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="childElement1" type="baseExampleType" minOccurs="2" maxOccurs="4"/>
+            </xsd:sequence>
+            <xsd:attribute name="top-attr-1" type="xsd:integer" default="1"/>
+            <xsd:attribute name="top-attr-2" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="alt-top-level-component">
+        <xsd:annotation>
+            <xsd:documentation>
+                Alternate Top Level EIP Component
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="altChildElement1" type="baseExampleType"/>
+            </xsd:sequence>
+            <xsd:attribute name="attr1" type="xsd:integer" default="-1"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="component-with-all-group">
+        <xsd:complexType>
+            <xsd:all>
+                <xsd:element name="child1" type="xsd:string"/>
+                <xsd:element name="child2" type="xsd:string"/>
+            </xsd:all>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="baseExampleType">
+        <xsd:annotation>
+            <xsd:documentation>
+                baseType example docs
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:choice maxOccurs="3">
+                <xsd:element name="nestedChild1" type="xsd:string"/>
+            </xsd:choice>
+            <xsd:sequence minOccurs="0">
+                <xsd:element name="nestedChild2" type="xsd:integer"/>
+            </xsd:sequence>
+        </xsd:sequence>
+        <xsd:attribute name="child-attr-1" type="xsd:boolean">
+            <xsd:annotation>
+                <xsd:documentation>Enable thing</xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+</xsd:schema>

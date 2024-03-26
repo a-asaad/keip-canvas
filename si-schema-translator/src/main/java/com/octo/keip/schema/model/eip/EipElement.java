@@ -55,7 +55,21 @@ public abstract class EipElement {
     protected String name;
     protected String description;
     protected Set<Attribute> attributes;
-    protected ChildGroup childGroup;
+    protected ChildComposite childGroup;
+
+    public Builder() {}
+
+    public Builder(EipElement element) {
+      this.name = element.name;
+      this.description = element.description;
+      this.attributes = element.attributes;
+      this.childGroup = element.childGroup;
+    }
+
+    public T name(String name) {
+      this.name = name;
+      return self();
+    }
 
     public T description(String description) {
       this.description = description;
@@ -75,7 +89,7 @@ public abstract class EipElement {
       return self();
     }
 
-    public T childGroup(ChildGroup childGroup) {
+    public T childGroup(ChildComposite childGroup) {
       this.childGroup = childGroup;
       return self();
     }

@@ -5,7 +5,6 @@ import com.octo.keip.schema.model.eip.EipChildElement;
 import com.octo.keip.schema.model.eip.EipComponent;
 import com.octo.keip.schema.model.eip.EipElement;
 import com.octo.keip.schema.model.eip.EipSchema;
-import com.octo.keip.schema.xml.visitor.EipTranslationVisitor;
 import java.util.Objects;
 import java.util.Set;
 import javax.xml.namespace.QName;
@@ -63,10 +62,11 @@ public class SiSchemaTranslator {
         eipVisitor.reset();
         schemaWalker.walk(element);
 
-        EipComponent.Builder eipComponentBuilder = eipVisitor.getEipComponent();
+        EipComponent eipComponent = eipVisitor.getEipComponent();
 
-        ChildGroup reduced = groupReducer.reduceGroup(eipComponentBuilder.build().getChildGroup());
-        eipSchema.addComponent(namespace, eipComponentBuilder.childGroup(reduced).build());
+        ChildGroup reduced = groupReducer.reduceGroup(eipComponent.getChildGroup());
+        eipComponent.setChildGroup(reduced);
+        eipSchema.addComponent(namespace, eipComponent);
       } catch (Exception e) {
         throw new RuntimeException(
             String.format("Error translating component: %s", element.getName()), e);

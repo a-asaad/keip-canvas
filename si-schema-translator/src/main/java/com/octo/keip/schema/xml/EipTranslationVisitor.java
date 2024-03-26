@@ -1,4 +1,4 @@
-package com.octo.keip.schema.xml.visitor;
+package com.octo.keip.schema.xml;
 
 import com.octo.keip.schema.model.eip.Attribute;
 import com.octo.keip.schema.model.eip.ChildComposite;
@@ -11,9 +11,7 @@ import com.octo.keip.schema.model.eip.Occurrence;
 import com.octo.keip.schema.model.eip.Role;
 import com.octo.keip.schema.xml.attribute.AnnotationTranslator;
 import com.octo.keip.schema.xml.attribute.AttributeTranslator;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.xml.namespace.QName;
 import org.apache.ws.commons.schema.XmlSchemaAll;
@@ -28,28 +26,31 @@ import org.apache.ws.commons.schema.walker.XmlSchemaAttrInfo;
 import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
 import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
 
-// TODO: Refactor
 public class EipTranslationVisitor implements XmlSchemaVisitor {
 
   private final AttributeTranslator attributeTranslator;
 
   private final AnnotationTranslator annotationTranslator;
 
-  private final Map<QName, ChildComposite> discoveredElements;
+  private final Map<QName, EipChildElement> visitedElements;
 
   private EipComponent.Builder eipComponentBuilder;
 
   private ChildCompositeWrapper currElement;
 
   public EipTranslationVisitor() {
-    this.attributeTranslator = new AttributeTranslator();
-    this.annotationTranslator = new AnnotationTranslator();
-    discoveredElements = new HashMap<>();
+    this(new AttributeTranslator(), new AnnotationTranslator());
   }
 
-  // TODO: Return EipComponent instead of builder
-  public EipComponent.Builder getEipComponent() {
-    return eipComponentBuilder;
+  public EipTranslationVisitor(
+      AttributeTranslator attributeTranslator, AnnotationTranslator annotationTranslator) {
+    this.attributeTranslator = attributeTranslator;
+    this.annotationTranslator = annotationTranslator;
+    this.visitedElements = new HashMap<>();
+  }
+
+  public EipComponent getEipComponent() {
+    return eipComponentBuilder.build();
   }
 
   public void reset() {
@@ -61,26 +62,26 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   public void onEnterElement(
       XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean visited) {
     if (xmlSchemaElement.isTopLevel()) {
-      assert eipComponentBuilder == null
-          : "The top level element should only be entered once. Was the visitor reset?";
-      // TODO: Figure out how to get flowtype and role.
-      eipComponentBuilder =
-          new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE)
-              .description(annotationTranslator.getDescription(xmlSchemaElement));
+      eipComponentBuilder = initTopLevelEipComponent(xmlSchemaElement);
       return;
     }
 
-    ChildComposite element;
+    EipChildElement element;
     if (visited) {
-      element = discoveredElements.get(getKey(xmlSchemaElement));
-      element = element.withOccurrence(getOccurrence(xmlSchemaElement));
+      element = visitedElements.get(getKey(xmlSchemaElement));
+      // Even if SchemaType is the same as a visited element, name/occurrence could be different.
+      element =
+          new EipChildElement.Builder(element)
+              .name(xmlSchemaElement.getName())
+              .occurrence(getOccurrence(xmlSchemaElement))
+              .build();
     } else {
       element =
           new EipChildElement.Builder(xmlSchemaElement.getName())
               .occurrence(getOccurrence(xmlSchemaElement))
               .description(annotationTranslator.getDescription(xmlSchemaElement))
               .build();
-      discoveredElements.putIfAbsent(getKey(xmlSchemaElement), element);
+      visitedElements.putIfAbsent(getKey(xmlSchemaElement), element);
     }
 
     var wrapper = new ChildCompositeWrapper(element, currElement);
@@ -101,13 +102,9 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   public void onVisitAttribute(
       XmlSchemaElement xmlSchemaElement, XmlSchemaAttrInfo xmlSchemaAttrInfo) {
     Attribute attribute = attributeTranslator.translate(xmlSchemaAttrInfo);
-
     if (xmlSchemaElement.isTopLevel()) {
       eipComponentBuilder.addAttribute(attribute);
-      return;
-    }
-
-    if (currElement.wrappedChild instanceof EipChildElement child) {
+    } else if (currElement.wrappedChild instanceof EipChildElement child) {
       child.addAttribute(attribute);
     }
   }
@@ -165,7 +162,6 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
     var group = new ChildGroup(indicator, getOccurrence(particle));
     var wrapper = new ChildCompositeWrapper(group, currElement);
 
-    // TODO: Prefer a cleaner way to do this one time check
     if (currElement == null) {
       // top level child group
       eipComponentBuilder.childGroup(group);
@@ -180,6 +176,16 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
     currElement = currElement.parent();
   }
 
+  private EipComponent.Builder initTopLevelEipComponent(XmlSchemaElement xmlSchemaElement) {
+    if (eipComponentBuilder != null) {
+      throw new IllegalStateException(
+          "The top level element should only be entered once. Was the visitor reset?");
+    }
+    // TODO: Figure out how to get flowtype and role.
+    return new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE)
+        .description(annotationTranslator.getDescription(xmlSchemaElement));
+  }
+
   private Occurrence getOccurrence(XmlSchemaParticle particle) {
     return new Occurrence(particle.getMinOccurs(), particle.getMaxOccurs());
   }
@@ -189,29 +195,5 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   private QName getKey(XmlSchemaElement element) {
     QName qName = element.getSchemaTypeName();
     return qName == null ? element.getQName() : qName;
-  }
-
-  // TODO: REMOVE
-  public static void printTree(ChildComposite child, String indentation) {
-    System.out.print(indentation);
-
-    List<ChildComposite> children = new ArrayList<>();
-
-    var minOccur = child.occurrence().min();
-    var maxOccur = child.occurrence().max() == Occurrence.UNBOUNDED ? -1 : child.occurrence().max();
-
-    if (child instanceof EipChildElement element) {
-      System.out.printf("%s (%d, %d)%n", element.getName(), minOccur, maxOccur);
-      if (element.getChildGroup() != null) {
-        children.add(element.getChildGroup());
-      }
-    } else if (child instanceof ChildGroup group) {
-      System.out.printf("%s (%d, %d)%n", group.indicator(), minOccur, maxOccur);
-      children.addAll(group.children());
-    }
-
-    for (var c : children) {
-      printTree(c, indentation + "  ");
-    }
   }
 }

@@ -54,6 +54,11 @@ public final class EipChildElement extends EipElement implements ChildComposite 
       this.name = Objects.requireNonNull(name);
     }
 
+    public Builder(EipChildElement element) {
+      super(element);
+      this.occurrence = element.occurrence;
+    }
+
     public Builder occurrence(Occurrence occurrence) {
       this.occurrence = occurrence;
       return self();
