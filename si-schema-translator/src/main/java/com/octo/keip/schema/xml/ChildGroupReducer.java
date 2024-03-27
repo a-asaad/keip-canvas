@@ -13,7 +13,6 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-// TODO: Make methods static?
 public class ChildGroupReducer {
 
   public ChildGroup reduceGroup(ChildComposite group) {

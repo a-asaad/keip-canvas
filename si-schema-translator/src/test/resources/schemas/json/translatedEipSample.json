@@ -1,0 +1,384 @@
+[
+  {
+    "name": "inbound-channel-adapter",
+    "description": "Defines a Polling Channel Adapter",
+    "role": "endpoint",
+    "flowType": "source",
+    "attributes": [
+      {
+        "name": "id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "channel",
+        "type": "string",
+        "description": "Identifies channel attached to this adapter. Depending on the type of the adapter this channel could be the receiving channel (e.g., outbound-channel-adapter) or channel where messages will be sent to by this adapter (e.g., inbound-channel-adapter)."
+      },
+      {
+        "name": "auto-startup",
+        "type": "boolean",
+        "description": "Boolean value indicating whether this endpoint should start automatically.",
+        "default": true
+      },
+      {
+        "name": "role",
+        "type": "string",
+        "description": "Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group. See 'SmartLifecycleRoleController'.",
+        "default": "defaultRole"
+      },
+      {
+        "name": "send-timeout",
+        "type": "number",
+        "description": "Maximum amount of time to wait when sending a message to the channel Defaults to '-1' - blocking indefinitely.",
+        "default": -1
+      },
+      {
+        "name": "timeout-unit",
+        "type": "string",
+        "restriction": {
+          "type": "enum",
+          "values": [
+            "MILLISECONDS",
+            "SECONDS"
+          ]
+        }
+      }
+    ],
+    "childGroup": {
+      "indicator": "sequence",
+      "children": [
+        {
+          "name": "poller",
+          "occurrence": {
+            "min": 0,
+            "max": 1
+          },
+          "description": "Defines the configuration metadata for a poller.",
+          "attributes": [
+            {
+              "name": "fixed-delay",
+              "type": "number",
+              "description": "Fixed delay trigger (in milliseconds)."
+            }
+          ],
+          "childGroup": {
+            "indicator": "sequence",
+            "children": [
+              {
+                "name": "transactional",
+                "attributes": [
+                  {
+                    "name": "propagation",
+                    "type": "string",
+                    "default": "REQUIRED",
+                    "restriction": {
+                      "type": "enum",
+                      "values": [
+                        "REQUIRED",
+                        "SUPPORTS",
+                        "NEVER"
+                      ]
+                    }
+                  }
+                ],
+                "occurrence": {
+                  "min": 0,
+                  "max": 1
+                }
+              },
+              {
+                "name": "advice-chain",
+                "occurrence": {
+                  "min": 0,
+                  "max": 1
+                },
+                "childGroup": {
+                  "indicator": "sequence",
+                  "children": [
+                    {
+                      "name": "ref",
+                      "occurrence": {
+                        "min": 0,
+                        "max": -1
+                      },
+                      "attributes": [
+                        {
+                          "name": "bean",
+                          "type": "string",
+                          "required": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "expression",
+          "occurrence": {
+            "min": 0,
+            "max": 1
+          },
+          "attributes": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The key for retrieving the expression from an ExpressionSource.",
+              "required": true
+            },
+            {
+              "name": "source",
+              "type": "string",
+              "default": "expressionSource",
+              "description": "The reference to an ExpressionSource."
+            }
+          ]
+        },
+        {
+          "name": "header",
+          "occurrence": {
+            "min": 0,
+            "max": -1
+          },
+          "attributes": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The name of the header",
+              "required": true
+            },
+            {
+              "name": "value",
+              "type": "string",
+              "description": "The value of the header. Either this or 'expression' must be provided."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "sample-filter",
+    "role": "endpoint",
+    "flowType": "source",
+    "attributes": [
+      {
+        "name": "throw-exception-on-rejection",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "name": "auto-startup",
+        "type": "boolean",
+        "description": "Boolean value indicating whether this endpoint should start automatically.",
+        "default": true
+      },
+      {
+        "name": "role",
+        "type": "string",
+        "description": "Assigns this endpoint to a role. Endpoints in a role can be started/stopped as a group. See 'SmartLifecycleRoleController'.",
+        "default": "defaultRole"
+      },
+      {
+        "name": "expression",
+        "type": "string"
+      },
+      {
+        "name": "output-channel",
+        "type": "string",
+        "description": "Message sent here"
+      },
+      {
+        "name": "input-channel",
+        "type": "string",
+        "description": "The message receiving channel"
+      },
+      {
+        "name": "handler-spec",
+        "type": "string",
+        "restriction": {
+          "type": "enum",
+          "values": [
+            "PRODUCER",
+            "CONSUMER"
+          ]
+        }
+      },
+      {
+        "name": "handler-spec-extension",
+        "type": "string",
+        "restriction": {
+          "type": "enum",
+          "values": [
+            "SINGLE"
+          ]
+        }
+      }
+    ],
+    "childGroup": {
+      "indicator": "sequence",
+      "children": [
+        {
+          "name": "poller",
+          "occurrence": {
+            "min": 0,
+            "max": 2
+          },
+          "description": "Defines the configuration metadata for a poller.",
+          "attributes": [
+            {
+              "name": "fixed-delay",
+              "type": "number",
+              "description": "Fixed delay trigger (in milliseconds)."
+            }
+          ],
+          "childGroup": {
+            "indicator": "sequence",
+            "children": [
+              {
+                "name": "transactional",
+                "attributes": [
+                  {
+                    "name": "propagation",
+                    "type": "string",
+                    "default": "REQUIRED",
+                    "restriction": {
+                      "type": "enum",
+                      "values": [
+                        "REQUIRED",
+                        "SUPPORTS",
+                        "NEVER"
+                      ]
+                    }
+                  }
+                ],
+                "occurrence": {
+                  "min": 0,
+                  "max": 1
+                }
+              },
+              {
+                "name": "advice-chain",
+                "occurrence": {
+                  "min": 0,
+                  "max": 1
+                },
+                "childGroup": {
+                  "indicator": "sequence",
+                  "children": [
+                    {
+                      "name": "ref",
+                      "occurrence": {
+                        "min": 0,
+                        "max": -1
+                      },
+                      "attributes": [
+                        {
+                          "name": "bean",
+                          "type": "string",
+                          "required": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "expression",
+          "occurrence": {
+            "min": 0,
+            "max": 2
+          },
+          "attributes": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": "The key for retrieving the expression from an ExpressionSource.",
+              "required": true
+            },
+            {
+              "name": "source",
+              "type": "string",
+              "default": "expressionSource",
+              "description": "The reference to an ExpressionSource."
+            }
+          ]
+        },
+        {
+          "name": "transactional",
+          "attributes": [
+            {
+              "name": "propagation",
+              "type": "string",
+              "default": "REQUIRED",
+              "restriction": {
+                "type": "enum",
+                "values": [
+                  "REQUIRED",
+                  "SUPPORTS",
+                  "NEVER"
+                ]
+              }
+            }
+          ],
+          "occurrence": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "name": "handler-advice-chain",
+          "occurrence": {
+            "min": 0,
+            "max": 1
+          },
+          "attributes": [
+            {
+              "name": "discard-within-advice",
+              "type": "string",
+              "default": "true"
+            }
+          ],
+          "childGroup": {
+            "indicator": "sequence",
+            "children": [
+              {
+                "name": "ref",
+                "occurrence": {
+                  "min": 0,
+                  "max": -1
+                },
+                "attributes": [
+                  {
+                    "name": "bean",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "name": "retry-advice",
+                "occurrence": {
+                  "min": 0,
+                  "max": -1
+                },
+                "attributes": [
+                  {
+                    "name": "max-attempts",
+                    "type": "string"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

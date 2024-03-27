@@ -146,7 +146,7 @@ class EipTranslationVisitorTest extends Specification {
     }
 
     private XmlSchemaWalker setupWalker() {
-        xmlSchemaCollection.read(getSchemaFileReader("sample.xml"))
+        xmlSchemaCollection.read(getSchemaFileReader("eip-visitor-sample.xml"))
         def walker = new XmlSchemaWalker(xmlSchemaCollection)
         walker.addVisitor(visitor)
         return walker
@@ -157,7 +157,7 @@ class EipTranslationVisitorTest extends Specification {
     }
 
     private static BufferedReader getSchemaFileReader(String filename) {
-        String path = Path.of("schemas", "eip-visitor-samples", filename).toString()
+        String path = Path.of("schemas", "xml", filename).toString()
         return EipTranslationVisitorTest.class.getClassLoader().getResource(path).newReader()
     }
 }

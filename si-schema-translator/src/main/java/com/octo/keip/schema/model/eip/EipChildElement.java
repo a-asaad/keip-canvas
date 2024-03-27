@@ -34,16 +34,8 @@ public final class EipChildElement extends EipElement implements ChildComposite 
     return this;
   }
 
-  // TODO: Create a builder constructor that takes an element?
   public EipChildElement withChildGroup(ChildComposite child) {
-    var element =
-        new Builder(this.name)
-            .description(this.description)
-            .attributes(this.attributes)
-            .occurrence(this.occurrence)
-            .build();
-    element.addChild(child);
-    return element;
+    return new Builder(this).childGroup(child).build();
   }
 
   public static class Builder extends EipElement.Builder<Builder> {

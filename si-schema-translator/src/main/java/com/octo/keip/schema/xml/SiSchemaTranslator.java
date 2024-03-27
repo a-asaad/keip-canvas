@@ -3,11 +3,9 @@ package com.octo.keip.schema.xml;
 import com.octo.keip.schema.model.eip.ChildGroup;
 import com.octo.keip.schema.model.eip.EipChildElement;
 import com.octo.keip.schema.model.eip.EipComponent;
-import com.octo.keip.schema.model.eip.EipElement;
-import com.octo.keip.schema.model.eip.EipSchema;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import javax.xml.namespace.QName;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
@@ -16,39 +14,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO: Add some comments
-// TODO: Add some error handling
 // TODO: Add some logging
 public class SiSchemaTranslator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SiSchemaTranslator.class);
 
-  // TODO: Pass in as a ctor arg. Make externally configurable.
   // TODO: Mostly excluded because of 'bean' element child reduction issue. Investigate solutions.
-  private final Set<String> EXCLUDED_COMPONENTS =
-      Set.of("selector-chain", "spel-property-accessors", "converter", "chain");
+  //  private final Set<String> excludedComponentNames =
+  //      Set.of("selector-chain", "spel-property-accessors", "converter", "chain");
 
-  // TODO: Pass in as a ctor arg. Make externally configurable.
-  private final Set<QName> SKIP_CHILD_REDUCE =
-      Set.of(new QName("http://www.springframework.org/schema/beans", "bean"));
+  private final Set<String> excludedComponentNames;
 
-  private final ChildGroupReducer groupReducer = new ChildGroupReducer();
+  private ChildGroupReducer groupReducer = new ChildGroupReducer();
 
-  public EipSchema apply(String namespace, XmlSchemaCollection schemaCollection, XmlSchema target) {
-    return translate(namespace, schemaCollection, target);
+  public SiSchemaTranslator(Set<String> excludedComponentNames) {
+    this.excludedComponentNames = excludedComponentNames;
   }
 
-  // TODO: Refactor
-  private EipSchema translate(
-      String namespace, XmlSchemaCollection schemaCol, XmlSchema xmlSchema) {
-    var eipSchema = new EipSchema();
+  void setGroupReducer(ChildGroupReducer groupReducer) {
+    this.groupReducer = groupReducer;
+  }
 
+  public List<EipComponent> translate(XmlSchemaCollection schemaCol, XmlSchema targetSchema) {
+    var eipComponents = new ArrayList<EipComponent>();
     var eipVisitor = new EipTranslationVisitor();
     var schemaWalker = new XmlSchemaWalker(schemaCol);
     schemaWalker.addVisitor(eipVisitor);
 
-    for (XmlSchemaElement element : xmlSchema.getElements().values()) {
-
-      if (EXCLUDED_COMPONENTS.contains(element.getName())) {
+    for (XmlSchemaElement element : targetSchema.getElements().values()) {
+      if (excludedComponentNames.contains(element.getName())) {
         LOGGER.debug("Skipping component: {}", element.getName());
         continue;
       }
@@ -56,40 +50,35 @@ public class SiSchemaTranslator {
       LOGGER.debug("Translating component: {}", element.getName());
 
       try {
-        // TODO: Should visitor be reset instead of created everytime?
-        // TODO: Should walker be cleared?
         // TODO: Make more robust against StackOverflow errors
         eipVisitor.reset();
         schemaWalker.walk(element);
 
         EipComponent eipComponent = eipVisitor.getEipComponent();
-
         ChildGroup reduced = groupReducer.reduceGroup(eipComponent.getChildGroup());
         eipComponent.setChildGroup(reduced);
-        eipSchema.addComponent(namespace, eipComponent);
+        eipComponents.add(eipComponent);
       } catch (Exception e) {
-        throw new RuntimeException(
-            String.format("Error translating component: %s", element.getName()), e);
+        LOGGER.error("Error translating component: {}", element.getName(), e);
       }
-
-      // TODO: Remove
-      //      System.out.println("Component: " + element.getName());
-      //      EipTranslationVisitor.printTree(reduced, "");
-      //      System.out.println();
-
-      //      eipSchema.addComponent(namespace, eipComponentBuilder.build());
     }
 
-    // xsd:any (namespace="##other"), most likely refer to beans.
-    assert isTopLevelFreeOfNestedGroups(eipSchema, namespace);
-    return eipSchema;
+    checkTopLevelFreeOfNestedGroups(eipComponents);
+    return eipComponents;
   }
 
-  private boolean isTopLevelFreeOfNestedGroups(EipSchema eipSchema, String namespace) {
-    return eipSchema.toMap().get(namespace).stream()
-        .map(EipElement::getChildGroup)
-        .filter(Objects::nonNull)
-        .flatMap(c -> c.children().stream())
-        .allMatch(c -> c instanceof EipChildElement);
+  private void checkTopLevelFreeOfNestedGroups(List<EipComponent> components) {
+    for (var component : components) {
+      if (component.getChildGroup() != null) {
+        for (var child : component.getChildGroup().children()) {
+          if (!(child instanceof EipChildElement)) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "Top level child group could not be reduced for component: %s",
+                    component.getName()));
+          }
+        }
+      }
+    }
   }
 }

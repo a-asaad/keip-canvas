@@ -63,6 +63,15 @@
         </xsd:complexType>
     </xsd:element>
 
+    <xsd:element name="ignored-component">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="child1" type="xsd:string"/>
+                <xsd:element name="child2" type="xsd:string"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
     <xsd:attributeGroup name="inputOutputChannelGroup">
         <xsd:attribute name="output-channel" type="xsd:string">
             <xsd:annotation>

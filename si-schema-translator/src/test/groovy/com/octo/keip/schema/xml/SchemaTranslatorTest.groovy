@@ -9,7 +9,7 @@ import com.octo.keip.schema.model.eip.ChildGroup
 import com.octo.keip.schema.model.eip.EipChildElement
 import com.octo.keip.schema.model.eip.EipComponent
 import com.octo.keip.schema.model.eip.EipElement
-import com.octo.keip.schema.model.eip.EipSchema
+import com.octo.keip.schema.model.eip.Indicator
 import com.octo.keip.schema.model.eip.Occurrence
 import com.octo.keip.schema.model.eip.Restriction
 import com.octo.keip.schema.serdes.ChildCompositeDeserializer
@@ -21,50 +21,64 @@ import spock.lang.Specification
 import java.nio.file.Path
 import java.util.function.BiConsumer
 
-class SchemaToModelTest extends Specification {
+class SchemaTranslatorTest extends Specification {
 
-    private static eipSchemaMapType = new TypeToken<Map<String, List<EipComponent>>>() {}
+    static final List<EipComponent> EIP_COMPONENTS = importEipSchema("translatedEipSample.json")
 
-    private static Reader testXmlReader
-    private static EipSchema sampleEipSchema
+    static final Set<String> EXCLUDED_COMPONENTS = ["ignored-component"]
 
-    void setupSpec() {
-        testXmlReader = getSchemaFileReader("sample.xml")
-//        testXmlReader = getSchemaFileReader("tmp/spring-integration-5.2.xsd")
-        sampleEipSchema = importEipSchema("eipSample.json")
-//        sampleEipSchema = importEipSchema("/tmp/minimal-schema.json")
-    }
+    def schemaTranslator = new SiSchemaTranslator(EXCLUDED_COMPONENTS)
 
-    def "Check fully translated EIP JSON Schema"() {
+    def schemaCollection = new XmlSchemaCollection()
+
+    def "Check end-to-end XML schema to EIP JSON translation success"() {
         given:
-        def translator = new SiSchemaTranslator()
-        def schemaCollection = new XmlSchemaCollection()
-//        def integrationSchema = schemaCollection.read(getSchemaFileReader("tmp/spring-integration-5.2.xsd"))
-        def integrationSchema = schemaCollection.read(testXmlReader)
-        schemaCollection.read(getSchemaFileReader("tmp/spring-beans.xsd"))
-        schemaCollection.read(getSchemaFileReader("tmp/spring-tool.xsd"))
+        def targetSchema = schemaCollection.read(getSchemaFileReader(Path.of("schema-translator-sample.xml")))
+        schemaCollection.read(getSchemaFileReader(Path.of("dependencies", "spring-tool.xsd")))
+
         when:
-        EipSchema resultSchema = translator.apply("test-namespace", schemaCollection, integrationSchema)
+        List<EipComponent> result = schemaTranslator.translate(schemaCollection, targetSchema)
+
         then:
-        assertSchemasEqual(sampleEipSchema, resultSchema)
+        assertCollectionsEqualNoOrder(
+                EIP_COMPONENTS,
+                result,
+                Comparator.comparing(EipElement::getName),
+                this::assertEipComponentsEqual,
+                "Comparing top level components")
     }
 
-    private void assertSchemasEqual(EipSchema expected, EipSchema actual) {
-        def actualMap = actual.toMap()
-        expected
-                .toMap()
-                .each { namespace, expectedComponents ->
-                    def actualComponents = actualMap[namespace]
-                    assertCollectionsEqualNoOrder(
-                            expectedComponents,
-                            actualComponents,
-                            Comparator.comparing(EipElement::getName),
-                            this::assertEipComponentsEqual,
-                            "Comparing top level components")
-                }
+    def "Check EIP translation schema with nested top level child groups (sequence, choice, etc.) not allowed"() {
+        given:
+        def noOpReducer = Mock(ChildGroupReducer)
+        noOpReducer.reduceGroup(_) >> { ChildGroup group -> group }
+        schemaTranslator.setGroupReducer(noOpReducer)
+
+        def targetSchema = schemaCollection.read(getSchemaFileReader(Path.of("schema-translator-sample.xml")))
+
+        when:
+        schemaTranslator.translate(schemaCollection, targetSchema)
+
+        then:
+        thrown(IllegalArgumentException)
     }
 
-    // TODO: Simplify
+    def "Exception thrown during component translation skips the component"() {
+        given:
+        def faultyReducer = Mock(ChildGroupReducer)
+        faultyReducer.reduceGroup(_) >> { throw new RuntimeException("broken reducer") } >> new ChildGroup(Indicator.SEQUENCE, Occurrence.DEFAULT)
+        schemaTranslator.setGroupReducer(faultyReducer)
+
+        def targetSchema = schemaCollection.read(getSchemaFileReader(Path.of("schema-translator-sample.xml")))
+
+        when:
+        List<EipComponent> result = schemaTranslator.translate(schemaCollection, targetSchema)
+
+        then:
+        result.size() == 1
+        result.getFirst().getName() == "sample-filter"
+    }
+
     private static void assertCollectionsEqualNoOrder(
             Collection expected,
             Collection actual,
@@ -146,18 +160,18 @@ class SchemaToModelTest extends Specification {
         }
     }
 
-    private static BufferedReader getSchemaFileReader(String filename) {
-        String path = Path.of("schemas", filename).toString()
-        return EipTranslationVisitorTest.class.getClassLoader().getResource(path).newReader()
+    private static BufferedReader getSchemaFileReader(Path filepath) {
+        String path = Path.of("schemas", "xml", filepath.toString()).toString()
+        return SchemaTranslatorTest.class.getClassLoader().getResource(path).newReader()
     }
 
-    private static EipSchema importEipSchema(String jsonFilename)
+    private static List<EipComponent> importEipSchema(String jsonFilename)
             throws URISyntaxException, IOException {
-        String schemaJson = SchemaToModelTest.getClassLoader().getResource("schemas/${jsonFilename}").text
+        String schemaJson = SchemaTranslatorTest.getClassLoader().getResource(Path.of("schemas", "json", jsonFilename).toString()).text
 
         Gson gson = configureGson()
-        Map<String, List<EipComponent>> eipSchemaMap = gson.fromJson(schemaJson, eipSchemaMapType)
-        return EipSchema.from(eipSchemaMap)
+        def eipComponentListType = new TypeToken<List<EipComponent>>() {}
+        return gson.fromJson(schemaJson, eipComponentListType)
     }
 
     private static Gson configureGson() {
