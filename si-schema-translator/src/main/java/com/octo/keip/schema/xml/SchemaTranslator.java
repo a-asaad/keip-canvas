@@ -15,19 +15,15 @@ import org.slf4j.LoggerFactory;
 
 // TODO: Add some comments
 // TODO: Add some logging
-public class SiSchemaTranslator {
+public class SchemaTranslator {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(SiSchemaTranslator.class);
-
-  // TODO: Mostly excluded because of 'bean' element child reduction issue. Investigate solutions.
-  //  private final Set<String> excludedComponentNames =
-  //      Set.of("selector-chain", "spel-property-accessors", "converter", "chain");
+  private static final Logger LOGGER = LoggerFactory.getLogger(SchemaTranslator.class);
 
   private final Set<String> excludedComponentNames;
 
   private ChildGroupReducer groupReducer = new ChildGroupReducer();
 
-  public SiSchemaTranslator(Set<String> excludedComponentNames) {
+  public SchemaTranslator(Set<String> excludedComponentNames) {
     this.excludedComponentNames = excludedComponentNames;
   }
 
@@ -50,7 +46,6 @@ public class SiSchemaTranslator {
       LOGGER.debug("Translating component: {}", element.getName());
 
       try {
-        // TODO: Make more robust against StackOverflow errors
         eipVisitor.reset();
         schemaWalker.walk(element);
 

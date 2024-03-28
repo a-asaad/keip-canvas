@@ -27,7 +27,7 @@ class SchemaTranslatorTest extends Specification {
 
     static final Set<String> EXCLUDED_COMPONENTS = ["ignored-component"]
 
-    def schemaTranslator = new SiSchemaTranslator(EXCLUDED_COMPONENTS)
+    def schemaTranslator = new SchemaTranslator(EXCLUDED_COMPONENTS)
 
     def schemaCollection = new XmlSchemaCollection()
 

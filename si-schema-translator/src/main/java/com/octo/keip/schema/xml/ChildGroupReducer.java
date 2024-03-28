@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 public class ChildGroupReducer {
 
+  // TODO: Might potentially want to limit recursion depth to prevent StackOverflow errors.
   public ChildGroup reduceGroup(ChildComposite group) {
     ChildComposite reduced = reduce(group);
     return (ChildGroup) reduced;
