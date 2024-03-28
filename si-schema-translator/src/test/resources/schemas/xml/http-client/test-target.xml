@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://www.example.com/test-target"
+            targetNamespace="http://www.example.com/test-target"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:first="http://www.example.com/first"
+            xmlns:second="http://www.example.com/second"
+            elementFormDefault="qualified">
+
+    <xsd:element name="element1">
+        <xsd:complexType>
+            <xsd:sequence>
+                <first:elem name="child1"/>
+                <second:custom name="child2"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
