@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="test-ns"
+            targetNamespace="test-ns"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified">
+
+    <xsd:element name="InboundElement">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="child1" type="xsd:string"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="source">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="base-inBound-type"/>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="example-Outbound">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="child1" type="xsd:string"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sink">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="OutboundType"/>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="handler">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="child1" type="xsd:string"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="connector">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="channelType"/>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="base-inBound-type">
+        <xsd:attribute name="attr1" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="OutboundType">
+        <xsd:attribute name="attr1" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="channelType">
+        <xsd:attribute name="attr1" type="xsd:string"/>
+    </xsd:complexType>
+
+</xsd:schema>

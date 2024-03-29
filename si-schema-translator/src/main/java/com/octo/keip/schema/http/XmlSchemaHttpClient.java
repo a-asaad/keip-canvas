@@ -81,6 +81,7 @@ public class XmlSchemaHttpClient {
   }
 
   private Stream<URI> namespaceToURI(Stream<String> namespaces) {
+    // TODO: Check xsd:imports if no matching URI is explicitly provided
     return namespaces
         .filter(
             ns -> {

@@ -163,7 +163,7 @@
   {
     "name": "sample-filter",
     "role": "endpoint",
-    "flowType": "source",
+    "flowType": "passthru",
     "attributes": [
       {
         "name": "throw-exception-on-rejection",

@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 // TODO: Add some comments
 // TODO: Add some logging
+
+/** Translates a Spring Integration XML schema into a list of {@link EipComponent} */
 public class SchemaTranslator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SchemaTranslator.class);

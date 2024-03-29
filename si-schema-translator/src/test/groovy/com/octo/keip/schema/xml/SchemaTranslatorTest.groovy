@@ -34,7 +34,7 @@ class SchemaTranslatorTest extends Specification {
     def "Check end-to-end XML schema to EIP JSON translation success"() {
         given:
         def targetSchema = schemaCollection.read(getSchemaFileReader(Path.of("schema-translator-sample.xml")))
-        schemaCollection.read(getSchemaFileReader(Path.of("dependencies", "spring-tool.xsd")))
+        schemaCollection.read(getSchemaFileReader(Path.of("imports", "spring-tool.xsd")))
 
         when:
         List<EipComponent> result = schemaTranslator.translate(schemaCollection, targetSchema)

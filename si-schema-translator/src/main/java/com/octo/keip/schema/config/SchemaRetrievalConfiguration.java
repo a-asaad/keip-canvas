@@ -2,6 +2,7 @@ package com.octo.keip.schema.config;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -30,9 +31,9 @@ public class SchemaRetrievalConfiguration {
     private String namespace;
     private URI location;
 
-    private List<SchemaIdentifier> importedSchemas;
+    private List<SchemaIdentifier> importedSchemas = Collections.emptyList();
 
-    private Set<String> excludedElements;
+    private Set<String> excludedElements = Collections.emptySet();
 
     public String getAlias() {
       return alias;

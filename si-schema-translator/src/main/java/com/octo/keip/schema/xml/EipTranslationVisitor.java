@@ -18,6 +18,9 @@ import org.apache.ws.commons.schema.XmlSchemaAll;
 import org.apache.ws.commons.schema.XmlSchemaAny;
 import org.apache.ws.commons.schema.XmlSchemaAnyAttribute;
 import org.apache.ws.commons.schema.XmlSchemaChoice;
+import org.apache.ws.commons.schema.XmlSchemaComplexContentExtension;
+import org.apache.ws.commons.schema.XmlSchemaComplexType;
+import org.apache.ws.commons.schema.XmlSchemaContent;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaGroupParticle;
 import org.apache.ws.commons.schema.XmlSchemaParticle;
@@ -25,8 +28,13 @@ import org.apache.ws.commons.schema.XmlSchemaSequence;
 import org.apache.ws.commons.schema.walker.XmlSchemaAttrInfo;
 import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
 import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+// TODO: Add logging
 public class EipTranslationVisitor implements XmlSchemaVisitor {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(EipTranslationVisitor.class);
 
   private final AttributeTranslator attributeTranslator;
 
@@ -176,9 +184,42 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
       throw new IllegalStateException(
           "The top level element should only be entered once. Was the visitor reset?");
     }
-    // TODO: Figure out how to get flowtype and role.
-    return new EipComponent.Builder(xmlSchemaElement.getName(), Role.ENDPOINT, FlowType.SOURCE)
+    return new EipComponent.Builder(
+            xmlSchemaElement.getName(), getRole(xmlSchemaElement), getFlowType(xmlSchemaElement))
         .description(annotationTranslator.getDescription(xmlSchemaElement));
+  }
+
+  private Role getRole(XmlSchemaElement element) {
+    if (getExtensionBaseName(element).equals("channelType")) {
+      return Role.CHANNEL;
+    }
+    return Role.ENDPOINT;
+  }
+
+  FlowType getFlowType(XmlSchemaElement element) {
+    String elementName = element.getName().toLowerCase();
+    String extensionBaseName = getExtensionBaseName(element).toLowerCase();
+    if (elementName.contains("inbound") || extensionBaseName.contains("inbound")) {
+      return FlowType.SOURCE;
+    } else if (elementName.contains("outbound") || extensionBaseName.contains("outbound")) {
+      return FlowType.SINK;
+    } else {
+      return FlowType.PASSTHRU;
+    }
+  }
+
+  private String getExtensionBaseName(XmlSchemaElement element) {
+    try {
+      if (element.getSchemaType() instanceof XmlSchemaComplexType complexType) {
+        XmlSchemaContent content = complexType.getContentModel().getContent();
+        if (content instanceof XmlSchemaComplexContentExtension extension) {
+          return extension.getBaseTypeName().getLocalPart();
+        }
+      }
+    } catch (NullPointerException e) {
+      LOGGER.trace("No base type content defined for: {}", element.getName());
+    }
+    return "";
   }
 
   private Occurrence getOccurrence(XmlSchemaParticle particle) {

@@ -12,3 +12,13 @@ schemas:
       - "spel-property-accessors"
       - "converter"
       - "chain"
+  - alias: "jms"
+    namespace: "http://www.springframework.org/schema/integration/jms"
+    location: "http://localhost:8080/spring-integration-jms-5.2.xsd"
+    importedSchemas:
+      - namespace: "http://www.springframework.org/schema/beans"
+        location: "http://localhost:8080/spring-beans.xsd"
+      - namespace: "http://www.springframework.org/schema/tool"
+        location: "http://localhost:8080/spring-tool.xsd"
+      - namespace: "http://www.springframework.org/schema/integration"
+        location: "http://localhost:8080/spring-integration-5.2.xsd"

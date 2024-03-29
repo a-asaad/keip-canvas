@@ -46,8 +46,6 @@ public class SchemaTranslatorApplication {
     //    } catch (IOException e) {
     //      throw new RuntimeException(e);
     //    }
-
-    var i = 4;
   }
 
   private static InputStream getYaml() {

@@ -23,18 +23,18 @@ class EipTranslationVisitorTest extends Specification {
 
     def visitor = new EipTranslationVisitor()
 
-    XmlSchemaWalker walker = setupWalker()
+    XmlSchemaWalker walker = setupWalker(xmlSchemaCollection, "eip-visitor-sample.xml")
 
     def "Top level element is set as the main EipComponent"() {
         when:
-        walker.walk(getTopLevelComponent("top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "top-level-component"))
         def eipComponent = visitor.getEipComponent()
 
         then:
         eipComponent.getName() == "top-level-component"
         eipComponent.getDescription() == "Top Level EIP Component"
         eipComponent.getRole() == Role.ENDPOINT
-        eipComponent.getFlowType() == FlowType.SOURCE
+        eipComponent.getFlowType() == FlowType.PASSTHRU
 
         def expectedAttrs = [new Attribute.Builder("top-attr-1", AttributeType.NUMBER).defaultValue("1").build(), new Attribute.Builder("top-attr-2", AttributeType.STRING).required(true).build()] as HashSet
         eipComponent.attributes == expectedAttrs
@@ -42,8 +42,8 @@ class EipTranslationVisitorTest extends Specification {
 
     def "Visit multiple top level elements without resetting visitor throws exception"() {
         when:
-        walker.walk(getTopLevelComponent("top-level-component"))
-        walker.walk(getTopLevelComponent("top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "top-level-component"))
 
         then:
         thrown(IllegalStateException)
@@ -51,7 +51,7 @@ class EipTranslationVisitorTest extends Specification {
 
     def "Top level element test single ChildGroup"() {
         when:
-        walker.walk(getTopLevelComponent("top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "top-level-component"))
         def eipComponent = visitor.getEipComponent()
 
         then:
@@ -63,7 +63,7 @@ class EipTranslationVisitorTest extends Specification {
 
     def "Visit with previously unseen child element"() {
         when:
-        walker.walk(getTopLevelComponent("top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "top-level-component"))
         def eipComponent = visitor.getEipComponent()
 
         then:
@@ -82,9 +82,9 @@ class EipTranslationVisitorTest extends Specification {
 
     def "Visit with previously visited child element"() {
         when:
-        walker.walk(getTopLevelComponent("top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "top-level-component"))
         visitor.reset()
-        walker.walk(getTopLevelComponent("alt-top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "alt-top-level-component"))
         def eipComponent = visitor.getEipComponent()
 
         then:
@@ -103,7 +103,7 @@ class EipTranslationVisitorTest extends Specification {
 
     def "Visit handle nested children"() {
         when:
-        walker.walk(getTopLevelComponent("top-level-component"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "top-level-component"))
         def eipComponent = visitor.getEipComponent()
 
         then:
@@ -135,7 +135,7 @@ class EipTranslationVisitorTest extends Specification {
 
     def "Visit component with an ALL group"() {
         when:
-        walker.walk(getTopLevelComponent("component-with-all-group"))
+        walker.walk(getTopLevelComponent(xmlSchemaCollection, "component-with-all-group"))
         def eipComponent = visitor.getEipComponent()
 
         then:
@@ -145,19 +145,60 @@ class EipTranslationVisitorTest extends Specification {
         group.children().size() == 2
     }
 
-    private XmlSchemaWalker setupWalker() {
-        xmlSchemaCollection.read(getSchemaFileReader("eip-visitor-sample.xml"))
+    def "EIP Component check flow type is set correctly"(String elementName, FlowType expectedType) {
+        given:
+        def schemaCollection = new XmlSchemaCollection()
+        def localWalker = setupWalker(schemaCollection, "flow-and-role-test-input.xml")
+
+        when:
+        localWalker.walk(getTopLevelComponent(schemaCollection, elementName))
+        def eipComponent = visitor.getEipComponent()
+
+        then:
+        eipComponent.getName() == elementName
+        eipComponent.getFlowType() == expectedType
+
+        where:
+        elementName | expectedType
+        "InboundElement"   | FlowType.SOURCE
+        "source"    | FlowType.SOURCE
+        "example-Outbound"  | FlowType.SINK
+        "sink"      | FlowType.SINK
+        "handler"   | FlowType.PASSTHRU
+    }
+
+    def "Eip Component check role is set correctly"(String elementName, Role expectedRole) {
+        given:
+        def schemaCollection = new XmlSchemaCollection()
+        def localWalker = setupWalker(schemaCollection, "flow-and-role-test-input.xml")
+
+        when:
+        localWalker.walk(getTopLevelComponent(schemaCollection, elementName))
+        def eipComponent = visitor.getEipComponent()
+
+        then:
+        eipComponent.getName() == elementName
+        eipComponent.getRole() == expectedRole
+
+        where:
+        elementName | expectedRole
+        "handler"   | Role.ENDPOINT
+        "connector" | Role.CHANNEL
+    }
+
+    private XmlSchemaWalker setupWalker(XmlSchemaCollection schemaCollection, String xmlFilename) {
+        schemaCollection.read(getSchemaFileReader(xmlFilename))
         def walker = new XmlSchemaWalker(xmlSchemaCollection)
         walker.addVisitor(visitor)
         return walker
     }
 
-    private XmlSchemaElement getTopLevelComponent(String name) {
-        return xmlSchemaCollection.schemaForNamespace(TEST_XML_NAMESPACE).getElementByName(name)
+    private XmlSchemaElement getTopLevelComponent(XmlSchemaCollection schemaCollection, String name) {
+        return schemaCollection.schemaForNamespace(TEST_XML_NAMESPACE).getElementByName(name)
     }
 
     private static BufferedReader getSchemaFileReader(String filename) {
-        String path = Path.of("schemas", "xml", filename).toString()
+        String path = Path.of("schemas", "xml", "visitor", filename).toString()
         return EipTranslationVisitorTest.class.getClassLoader().getResource(path).newReader()
     }
 }
