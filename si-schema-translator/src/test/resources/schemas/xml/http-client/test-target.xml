@@ -4,13 +4,22 @@
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:first="http://www.example.com/first"
             xmlns:second="http://www.example.com/second"
+            xmlns:third="http://www.example.com/third"
             elementFormDefault="qualified">
+
+    <xsd:import namespace="http://www.example.com/first"/>
+
+    <xsd:import namespace="http://www.example.com/second"/>
+
+    <xsd:import namespace="http://www.example.com/third"
+                schemaLocation="src/test/resources/schemas/xml/http-client/third.xml"/>
 
     <xsd:element name="element1">
         <xsd:complexType>
             <xsd:sequence>
                 <first:elem name="child1"/>
                 <second:custom name="child2"/>
+                <third:elem name="child3"/>
             </xsd:sequence>
         </xsd:complexType>
     </xsd:element>

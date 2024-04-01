@@ -29,7 +29,8 @@ public class SchemaTranslatorApplication {
       schemaLocations.put(targetSchema.getNamespace(), targetSchema.getLocation());
       var httpClient = new XmlSchemaHttpClient(schemaLocations);
       try {
-        XmlSchemaCollection schemaCollection = httpClient.collect(targetSchema.getNamespace());
+        XmlSchemaCollection schemaCollection =
+            httpClient.collect(targetSchema.getNamespace(), targetSchema.getLocation());
         var translator = new SchemaTranslator(targetSchema.getExcludedElements());
         List<EipComponent> components =
             translator.translate(

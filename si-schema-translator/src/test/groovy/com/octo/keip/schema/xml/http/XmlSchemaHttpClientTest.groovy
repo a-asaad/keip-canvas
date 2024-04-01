@@ -15,35 +15,28 @@ import static org.apache.ws.commons.schema.XmlSchemaSerializer.XSD_NAMESPACE
 class XmlSchemaHttpClientTest extends Specification {
 
     static final TARGET_NAMESPACE = "http://www.example.com/test-target"
-    static final FIRST_LINKED_NAMESPACE = "http://www.example.com/first"
-    static final SECOND_LINKED_NAMESPACE = "http://www.example.com/second"
+    static final FIRST_NAMESPACE = "http://www.example.com/first"
+    static final SECOND_NAMESPACE = "http://www.example.com/second"
+    static final THIRD_NAMESPACE = "http://www.example.com/third"
 
-    Map<String, URI> schemaLocations = [(TARGET_NAMESPACE)       : URI.create("http://localhost/test-target"),
-                                        (FIRST_LINKED_NAMESPACE) : URI.create("http://localhost/first"),
-                                        (SECOND_LINKED_NAMESPACE): URI.create("http://localhost/second"),]
+    static final TARGET_URI = URI.create("http://localhost/test-target")
+
+    Map<String, URI> userProvidedSchemaLocations = [
+            (FIRST_NAMESPACE) : URI.create("http://localhost/first"),
+            (SECOND_NAMESPACE): URI.create("http://localhost/second")
+    ]
 
     HttpClient httpClient = defaultHttpClientMock()
 
-    def xmlSchemaClient = new XmlSchemaHttpClient(httpClient, schemaLocations)
+    def xmlSchemaClient = new XmlSchemaHttpClient(httpClient, userProvidedSchemaLocations)
 
-    def "Collect target and linked schemas success"() {
+    def "Collect target and imported schemas success"() {
         when:
-        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE)
+        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         def namespaces = getNamespaces(schemaCollection)
-        namespaces ==~ [TARGET_NAMESPACE, FIRST_LINKED_NAMESPACE, SECOND_LINKED_NAMESPACE, XSD_NAMESPACE]
-    }
-
-    def "Collect with missing target schema location throws exception"() {
-        given:
-        schemaLocations.remove(TARGET_NAMESPACE)
-
-        when:
-        xmlSchemaClient.collect(TARGET_NAMESPACE)
-
-        then:
-        thrown(IllegalArgumentException)
+        namespaces ==~ [TARGET_NAMESPACE, FIRST_NAMESPACE, SECOND_NAMESPACE, THIRD_NAMESPACE, XSD_NAMESPACE]
     }
 
     def "Response from target-schema URI with error status code throws exception"() {
@@ -52,7 +45,7 @@ class XmlSchemaHttpClientTest extends Specification {
         errorResponse.statusCode() >> 404
 
         when:
-        xmlSchemaClient.collect(TARGET_NAMESPACE)
+        xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         httpClient.send(_, _) >> errorResponse
@@ -61,52 +54,52 @@ class XmlSchemaHttpClientTest extends Specification {
 
     def "Sending target-schema request throws an exception, exception is uncaught"() {
         when:
-        xmlSchemaClient.collect(TARGET_NAMESPACE)
+        xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         httpClient.send(_, _) >> { throw new ConnectException("server down") }
         thrown(ConnectException)
     }
 
-    def "Sending linked schema request throws an exception, exception is uncaught"() {
+    def "Sending imported schema http request throws an exception, exception is uncaught"() {
         when:
-        xmlSchemaClient.collect(TARGET_NAMESPACE)
+        xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         httpClient.sendAsync(_, _) >> { throw new ConnectException("server down") }
         thrown(ConnectException)
     }
 
-    def "Collect with missing linked schema location ignores missing URI and collects the remaining URIs"() {
+    def "When an import location is not provided in the user-supplied locations map, ignore the missing URI and collect the rest"() {
         given:
-        schemaLocations.remove(FIRST_LINKED_NAMESPACE)
+        userProvidedSchemaLocations.remove(FIRST_NAMESPACE)
 
         when:
-        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE)
+        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         def namespaces = getNamespaces(schemaCollection)
-        namespaces ==~ [TARGET_NAMESPACE, SECOND_LINKED_NAMESPACE, XSD_NAMESPACE]
+        namespaces ==~ [TARGET_NAMESPACE, SECOND_NAMESPACE, THIRD_NAMESPACE, XSD_NAMESPACE]
     }
 
-    def "'Future' errors generated while fetching linked schemas are skipped. The remaining URIs are collected"() {
+    def "'Future' errors generated while fetching imported schemas are skipped. The remaining URIs are collected"() {
         given:
         def mockClient = minimalHttpClientMock()
         stubSendAsyncInteraction(mockClient,
-                CompletableFuture.failedFuture(new ConnectException("linked schema fail")),
+                CompletableFuture.failedFuture(new ConnectException("imported schema fail")),
                 CompletableFuture.completedFuture(mockHttpResponse("second.xml")))
 
-        xmlSchemaClient = new XmlSchemaHttpClient(mockClient, schemaLocations)
+        xmlSchemaClient = new XmlSchemaHttpClient(mockClient, userProvidedSchemaLocations)
 
         when:
-        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE)
+        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         def namespaces = getNamespaces(schemaCollection)
-        namespaces ==~ [TARGET_NAMESPACE, SECOND_LINKED_NAMESPACE, XSD_NAMESPACE]
+        namespaces ==~ [TARGET_NAMESPACE, SECOND_NAMESPACE, THIRD_NAMESPACE, XSD_NAMESPACE]
     }
 
-    def "Linked schema requests that return error response codes are skipped"() {
+    def "Imported schema http requests that return error response codes are skipped"() {
         given:
         def errorResponse = Mock(HttpResponse)
         errorResponse.statusCode() >> 404
@@ -116,17 +109,17 @@ class XmlSchemaHttpClientTest extends Specification {
                 CompletableFuture.completedFuture(errorResponse),
                 CompletableFuture.completedFuture(mockHttpResponse("second.xml")))
 
-        xmlSchemaClient = new XmlSchemaHttpClient(mockClient, schemaLocations)
+        xmlSchemaClient = new XmlSchemaHttpClient(mockClient, userProvidedSchemaLocations)
 
         when:
-        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE)
+        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         def namespaces = getNamespaces(schemaCollection)
-        namespaces ==~ [TARGET_NAMESPACE, SECOND_LINKED_NAMESPACE, XSD_NAMESPACE]
+        namespaces ==~ [TARGET_NAMESPACE, SECOND_NAMESPACE, THIRD_NAMESPACE, XSD_NAMESPACE]
     }
 
-    def "Error reading a successful linked schema response is skipped"() {
+    def "Error reading a successfully fetched schema response is skipped"() {
         given:
         def unreadableResponse = mockHttpResponse("first.xml")
         unreadableResponse.body().close()
@@ -136,14 +129,14 @@ class XmlSchemaHttpClientTest extends Specification {
                 CompletableFuture.completedFuture(unreadableResponse),
                 CompletableFuture.completedFuture(mockHttpResponse("second.xml")))
 
-        xmlSchemaClient = new XmlSchemaHttpClient(mockClient, schemaLocations)
+        xmlSchemaClient = new XmlSchemaHttpClient(mockClient, userProvidedSchemaLocations)
 
         when:
-        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE)
+        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
 
         then:
         def namespaces = getNamespaces(schemaCollection)
-        namespaces ==~ [TARGET_NAMESPACE, SECOND_LINKED_NAMESPACE, XSD_NAMESPACE]
+        namespaces ==~ [TARGET_NAMESPACE, SECOND_NAMESPACE, THIRD_NAMESPACE, XSD_NAMESPACE]
     }
 
     private HttpClient defaultHttpClientMock() {
