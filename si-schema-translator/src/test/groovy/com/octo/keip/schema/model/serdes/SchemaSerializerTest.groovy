@@ -13,12 +13,16 @@ import com.octo.keip.schema.model.eip.Occurrence
 import com.octo.keip.schema.model.eip.Restriction
 import com.octo.keip.schema.model.eip.Role
 import spock.lang.Specification
+import spock.lang.TempDir
 
 import java.nio.file.Path
 
 class SchemaSerializerTest extends Specification {
 
     static final EXPECTED_SCHEMA_JSON = importEipSchemaJson()
+
+    @TempDir
+    File testDir
 
     def "Serialize EipSchema to JSON String"() {
         given:
@@ -35,12 +39,13 @@ class SchemaSerializerTest extends Specification {
                 .childGroup(new ChildGroup(Indicator.SEQUENCE, List.of(child)))
                 .build()
         def eipSchema = EipSchema.from(Map.of("test-ns", List.of(eipComponent)))
+        def outputFile = new File(testDir, "schema.json")
 
         when:
-        def result = SchemaSerializer.toJson(eipSchema)
+        SchemaSerializer.writeSchemaToJsonFile(eipSchema, outputFile)
 
         then:
-        JsonParser.parseString(result) == JsonParser.parseString(EXPECTED_SCHEMA_JSON)
+        JsonParser.parseString(outputFile.text) == JsonParser.parseString(EXPECTED_SCHEMA_JSON)
     }
 
     def "Test custom occurrence deserializer"(Occurrence input, String expectedJson) {
@@ -51,11 +56,11 @@ class SchemaSerializerTest extends Specification {
         JsonParser.parseString(result) == JsonParser.parseString(expectedJson)
 
         where:
-        input                | expectedJson
-        Occurrence.DEFAULT   | ""
-        new Occurrence(0, 1) | "{min: 0}"
-        new Occurrence(1, 3) | "{max: 3}"
-        new Occurrence(5, 10) | "{min: 5, max: 10}"
+        input                                   | expectedJson
+        Occurrence.DEFAULT                      | ""
+        new Occurrence(0, 1)                    | "{min: 0}"
+        new Occurrence(1, 3)                    | "{max: 3}"
+        new Occurrence(5, 10)                   | "{min: 5, max: 10}"
         new Occurrence(0, Occurrence.UNBOUNDED) | "{min: 0, max: -1}"
     }
 

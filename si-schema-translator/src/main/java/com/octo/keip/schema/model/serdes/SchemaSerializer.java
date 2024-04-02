@@ -13,11 +13,7 @@ public class SchemaSerializer {
   static final Gson GSON =
       new GsonBuilder().registerTypeAdapter(Occurrence.class, new OccurrenceSerializer()).create();
 
-  public static String toJson(EipSchema eipSchema) {
-    return GSON.toJson(eipSchema.toMap());
-  }
-
-  public void writeSchemaToJsonFile(EipSchema eipSchema, File file) throws IOException {
+  public static void writeSchemaToJsonFile(EipSchema eipSchema, File file) throws IOException {
     try (Writer writer = new FileWriter(file)) {
       GSON.toJson(eipSchema.toMap(), writer);
     }
