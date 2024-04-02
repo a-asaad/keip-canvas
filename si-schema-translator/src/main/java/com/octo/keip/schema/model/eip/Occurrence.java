@@ -22,7 +22,8 @@ public record Occurrence(long min, long max) {
       map.put("min", min);
     }
     if (max != DEFAULT_MAX) {
-      map.put("max", max);
+      long maxVal = max == UNBOUNDED ? -1L : max;
+      map.put("max", maxVal);
     }
     return Collections.unmodifiableMap(map);
   }

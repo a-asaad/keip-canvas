@@ -1,0 +1,35 @@
+{
+  "test-ns": [
+    {
+      "name": "test-top",
+      "role": "endpoint",
+      "flowType": "source",
+      "description": "test top level description",
+      "attributes": [
+        {
+          "name": "test-attr",
+          "type": "string",
+          "description": "test attr description",
+          "default": "default val",
+          "required": false,
+          "restriction": {
+            "type": "enum",
+            "values": [
+              "first",
+              "second"
+            ]
+          }
+        }
+      ],
+      "childGroup": {
+        "indicator": "sequence",
+        "children": [
+          {
+            "name": "test-child",
+            "description": "test child description"
+          }
+        ]
+      }
+    }
+  ]
+}
