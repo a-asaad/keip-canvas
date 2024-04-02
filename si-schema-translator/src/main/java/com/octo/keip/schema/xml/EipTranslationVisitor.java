@@ -199,7 +199,9 @@ public class EipTranslationVisitor implements XmlSchemaVisitor {
   FlowType getFlowType(XmlSchemaElement element) {
     String elementName = element.getName().toLowerCase();
     String extensionBaseName = getExtensionBaseName(element).toLowerCase();
-    if (elementName.contains("inbound") || extensionBaseName.contains("inbound")) {
+    if (elementName.contains("inbound")
+        || elementName.contains("message-driven")
+        || extensionBaseName.contains("inbound")) {
       return FlowType.SOURCE;
     } else if (elementName.contains("outbound") || extensionBaseName.contains("outbound")) {
       return FlowType.SINK;

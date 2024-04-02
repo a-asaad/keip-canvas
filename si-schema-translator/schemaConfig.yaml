@@ -1,7 +1,11 @@
+# Some minor errors were present in some spring-integration schemas.
+# The XMLs were corrected and served on a local http server.
+# The errors for each schema (if present) are commented below
+
 schemas:
   - alias: "integration"
     namespace: "http://www.springframework.org/schema/integration"
-    location: "https://www.springframework.org/schema/integration/spring-integration-5.2.xsd"
+    location: "http://localhost:8080/spring-integration-5.2.xsd"
     excludedElements:
       - "selector-chain"
       - "spel-property-accessors"
@@ -10,26 +14,32 @@ schemas:
 
   - alias: "jms"
     namespace: "http://www.springframework.org/schema/integration/jms"
-    location: "https://www.springframework.org/schema/integration/jms/spring-integration-jms-5.2.xsd"
+    location: "http://localhost:8080/spring-integration-jms-5.2.xsd"
 
   - alias: "http"
     namespace: "http://www.springframework.org/schema/integration/http"
-    location: "https://www.springframework.org/schema/integration/http/spring-integration-http-5.2.xsd"
+    location: "http://localhost:8080/spring-integration-http-5.2.xsd"
 
+  # The 'nio-locker' element had no type defined, causing the schema walker to throw an exception.
   - alias: "file"
     namespace: "http://www.springframework.org/schema/integration/file"
-    location: "https://www.springframework.org/schema/integration/file/spring-integration-file-5.2.xsd"
+    location: "http://localhost:8080/spring-integration-file-5.2.xsd"
+    excludedElements:
+      - "locker"
+      - "nio-locker"
 
+  # The schemaLocation provided for the core spring-integration schema was outdated. Changed the URL to point to the
+  # latest version.
   - alias: "kafka"
     namespace: "http://www.springframework.org/schema/integration/kafka"
-    location: "https://www.springframework.org/schema/integration/kafka/spring-integration-kafka-3.1.xsd"
+    location: "http://localhost:8080/spring-integration-kafka-3.1.xsd"
 
   - alias: "groovy"
     namespace: "http://www.springframework.org/schema/integration/groovy"
-    location: "https://www.springframework.org/schema/integration/groovy/spring-integration-groovy-5.2.xsd"
+    location: "http://localhost:8080/spring-integration-groovy-5.2.xsd"
 
 importedSchemaLocations:
   - namespace: "http://www.springframework.org/schema/beans"
-    location: "https://www.springframework.org/schema/beans/spring-beans-4.3.xsd"
+    location: "http://localhost:8080/spring-beans.xsd"
   - namespace: "http://www.springframework.org/schema/tool"
-    location: "https://www.springframework.org/schema/tool/spring-tool-4.3.xsd"
+    location: "http://localhost:8080/spring-tool.xsd"

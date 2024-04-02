@@ -36,6 +36,14 @@
         </xsd:complexType>
     </xsd:element>
 
+    <xsd:element name="example-message-driven">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="child1" type="xsd:string"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
     <xsd:element name="handler">
         <xsd:complexType>
             <xsd:sequence>

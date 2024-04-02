@@ -160,12 +160,13 @@ class EipTranslationVisitorTest extends Specification {
         eipComponent.getFlowType() == expectedType
 
         where:
-        elementName        | expectedType
-        "InboundElement"   | FlowType.SOURCE
-        "source"           | FlowType.SOURCE
-        "example-Outbound" | FlowType.SINK
-        "sink"             | FlowType.SINK
-        "handler"          | FlowType.PASSTHRU
+        elementName              | expectedType
+        "InboundElement"         | FlowType.SOURCE
+        "source"                 | FlowType.SOURCE
+        "example-message-driven" | FlowType.SOURCE
+        "example-Outbound"       | FlowType.SINK
+        "sink"                   | FlowType.SINK
+        "handler"                | FlowType.PASSTHRU
     }
 
     def "Eip Component check role is set correctly"(String elementName, Role expectedRole) {
