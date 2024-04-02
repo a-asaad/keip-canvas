@@ -38,6 +38,16 @@ class XmlSchemaHttpClientTest extends Specification {
         namespaces ==~ [TARGET_NAMESPACE, FIRST_NAMESPACE, SECOND_NAMESPACE, THIRD_NAMESPACE, XSD_NAMESPACE]
     }
 
+    def "Collect target and caching imported schemas success"() {
+        when:
+        xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
+        def schemaCollection = xmlSchemaClient.collect(TARGET_NAMESPACE, TARGET_URI)
+
+        then:
+        def namespaces = getNamespaces(schemaCollection)
+        namespaces ==~ [TARGET_NAMESPACE, FIRST_NAMESPACE, SECOND_NAMESPACE, THIRD_NAMESPACE, XSD_NAMESPACE]
+    }
+
     def "Response from target-schema URI with error status code throws exception"() {
         given:
         def errorResponse = Mock(HttpResponse)
@@ -148,7 +158,7 @@ class XmlSchemaHttpClientTest extends Specification {
 
     private HttpClient minimalHttpClientMock() {
         HttpClient httpClient = Mock(HttpClient)
-        httpClient.send(_, _) >> mockHttpResponse("test-target.xml")
+        httpClient.send(_, _) >>> [mockHttpResponse("test-target.xml"), mockHttpResponse("test-target.xml")]
         return httpClient
     }
 

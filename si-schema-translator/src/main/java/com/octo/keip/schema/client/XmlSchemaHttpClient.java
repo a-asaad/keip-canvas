@@ -10,12 +10,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaImport;
+import org.apache.ws.commons.schema.XmlSchemaSerializer.XmlSchemaSerializerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +32,8 @@ public class XmlSchemaHttpClient implements XmlSchemaClient {
   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(20);
 
   private final Map<String, URI> additionalSchemaLocations;
+
+  private final Map<URI, XmlSchema> fetchedSchemas = new HashMap<>();
 
   private final HttpClient httpClient;
 
@@ -69,31 +75,53 @@ public class XmlSchemaHttpClient implements XmlSchemaClient {
    */
   private void collectUnderDefinedImports(
       XmlSchemaCollection schemaCollection, String targetNamespace) {
-    Stream<URI> linkedUris =
-        namespaceToURI(getImportsWithNoLocation(schemaCollection, targetNamespace));
+    List<URI> fetchableImports =
+        namespaceToURI(getImportsWithNoLocation(schemaCollection, targetNamespace)).toList();
+
+    fetchableImports.stream()
+        .filter(fetchedSchemas::containsKey)
+        .forEach(uri -> collectCachedImports(schemaCollection, uri));
 
     Stream<CompletableFuture<HttpResponse<InputStream>>> responseFutures =
-        linkedUris.map(
-            uri -> {
-              LOGGER.info("Fetching: {}", uri);
-              return httpClient
-                  .sendAsync(
-                      HttpRequest.newBuilder(uri).timeout(REQUEST_TIMEOUT).GET().build(),
-                      BodyHandlers.ofInputStream())
-                  .handle(
-                      (response, ex) -> {
-                        if (ex != null) {
-                          LOGGER.warn("Failed to collect schema at: {}", uri, ex);
-                          return null;
-                        }
-                        if (response != null) {
-                          readResponseIntoCollection(schemaCollection, response);
-                        }
-                        return response;
-                      });
-            });
+        fetchableImports.stream()
+            .filter(Predicate.not(fetchedSchemas::containsKey))
+            .map(uri -> fetchImports(schemaCollection, uri));
 
     CompletableFuture.allOf(responseFutures.toArray(CompletableFuture[]::new)).join();
+  }
+
+  private void collectCachedImports(XmlSchemaCollection schemaCollection, URI importLocation) {
+    XmlSchema cached = fetchedSchemas.get(importLocation);
+    if (cached != null) {
+      try {
+        schemaCollection.read(cached.getSchemaDocument());
+      } catch (XmlSchemaSerializerException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  private CompletableFuture<HttpResponse<InputStream>> fetchImports(
+      XmlSchemaCollection schemaCollection, URI importLocation) {
+    LOGGER.info("Fetching: {}", importLocation);
+    return httpClient
+        .sendAsync(
+            HttpRequest.newBuilder(importLocation).timeout(REQUEST_TIMEOUT).GET().build(),
+            BodyHandlers.ofInputStream())
+        .handle(
+            (response, ex) -> {
+              if (ex != null) {
+                LOGGER.warn("Failed to collect schema at: {}", importLocation, ex);
+                return null;
+              }
+              if (response != null) {
+                XmlSchema schema = readResponseIntoCollection(schemaCollection, response);
+                if (schema != null) {
+                  fetchedSchemas.put(importLocation, schema);
+                }
+              }
+              return response;
+            });
   }
 
   private Stream<String> getImportsWithNoLocation(
@@ -117,21 +145,22 @@ public class XmlSchemaHttpClient implements XmlSchemaClient {
         .map(additionalSchemaLocations::get);
   }
 
-  private void readResponseIntoCollection(
+  private XmlSchema readResponseIntoCollection(
       XmlSchemaCollection schemaCollection, HttpResponse<InputStream> response) {
     if (response.statusCode() != 200) {
       LOGGER.warn(
           "Failed to retrieve xml schema at: '{}'. response code: '{}'",
           response.uri(),
           response.statusCode());
-      return;
+      return null;
     }
 
     try (var reader = toReader(response.body())) {
-      schemaCollection.read(reader);
+      return schemaCollection.read(reader);
     } catch (Exception e) {
       LOGGER.error("Unable to parse xml schema obtained from: {}", response.uri(), e);
     }
+    return null;
   }
 
   private BufferedReader toReader(InputStream is) {
