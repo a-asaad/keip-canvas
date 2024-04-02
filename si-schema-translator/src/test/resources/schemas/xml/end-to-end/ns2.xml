@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://www.example.com/schema/ns2"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.example.com/schema/ns2"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+    <xsd:element name="filter">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="poller" type="xsd:string"/>
+            </xsd:sequence>
+            <xsd:attribute name="delay" type="xsd:integer"/>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

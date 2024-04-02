@@ -8,6 +8,7 @@ import com.octo.keip.schema.model.eip.FlowType
 import com.octo.keip.schema.model.eip.Indicator
 import com.octo.keip.schema.model.eip.Occurrence
 import com.octo.keip.schema.model.eip.Role
+import com.octo.keip.schema.test.TestIOUtils
 import org.apache.ws.commons.schema.XmlSchemaCollection
 import org.apache.ws.commons.schema.XmlSchemaElement
 import org.apache.ws.commons.schema.walker.XmlSchemaWalker
@@ -23,7 +24,7 @@ class EipTranslationVisitorTest extends Specification {
 
     def visitor = new EipTranslationVisitor()
 
-    XmlSchemaWalker walker = setupWalker(xmlSchemaCollection, "eip-visitor-sample.xml")
+    XmlSchemaWalker walker = setupWalker(xmlSchemaCollection, Path.of("visitor", "eip-visitor-sample.xml"))
 
     def "Top level element is set as the main EipComponent"() {
         when:
@@ -148,7 +149,7 @@ class EipTranslationVisitorTest extends Specification {
     def "EIP Component check flow type is set correctly"(String elementName, FlowType expectedType) {
         given:
         def schemaCollection = new XmlSchemaCollection()
-        def localWalker = setupWalker(schemaCollection, "flow-and-role-test-input.xml")
+        def localWalker = setupWalker(schemaCollection, Path.of("visitor", "flow-and-role-test-input.xml"))
 
         when:
         localWalker.walk(getTopLevelComponent(schemaCollection, elementName))
@@ -159,18 +160,18 @@ class EipTranslationVisitorTest extends Specification {
         eipComponent.getFlowType() == expectedType
 
         where:
-        elementName | expectedType
+        elementName        | expectedType
         "InboundElement"   | FlowType.SOURCE
-        "source"    | FlowType.SOURCE
-        "example-Outbound"  | FlowType.SINK
-        "sink"      | FlowType.SINK
-        "handler"   | FlowType.PASSTHRU
+        "source"           | FlowType.SOURCE
+        "example-Outbound" | FlowType.SINK
+        "sink"             | FlowType.SINK
+        "handler"          | FlowType.PASSTHRU
     }
 
     def "Eip Component check role is set correctly"(String elementName, Role expectedRole) {
         given:
         def schemaCollection = new XmlSchemaCollection()
-        def localWalker = setupWalker(schemaCollection, "flow-and-role-test-input.xml")
+        def localWalker = setupWalker(schemaCollection, Path.of("visitor", "flow-and-role-test-input.xml"))
 
         when:
         localWalker.walk(getTopLevelComponent(schemaCollection, elementName))
@@ -186,8 +187,8 @@ class EipTranslationVisitorTest extends Specification {
         "connector" | Role.CHANNEL
     }
 
-    private XmlSchemaWalker setupWalker(XmlSchemaCollection schemaCollection, String xmlFilename) {
-        schemaCollection.read(getSchemaFileReader(xmlFilename))
+    private XmlSchemaWalker setupWalker(XmlSchemaCollection schemaCollection, Path xmlFilePath) {
+        schemaCollection.read(TestIOUtils.getXmlSchemaFileReader(xmlFilePath))
         def walker = new XmlSchemaWalker(xmlSchemaCollection)
         walker.addVisitor(visitor)
         return walker
@@ -195,10 +196,5 @@ class EipTranslationVisitorTest extends Specification {
 
     private XmlSchemaElement getTopLevelComponent(XmlSchemaCollection schemaCollection, String name) {
         return schemaCollection.schemaForNamespace(TEST_XML_NAMESPACE).getElementByName(name)
-    }
-
-    private static BufferedReader getSchemaFileReader(String filename) {
-        String path = Path.of("schemas", "xml", "visitor", filename).toString()
-        return EipTranslationVisitorTest.class.getClassLoader().getResource(path).newReader()
     }
 }

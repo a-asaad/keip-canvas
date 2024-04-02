@@ -1,0 +1,44 @@
+{
+  "ns1": [
+    {
+      "name": "adapter",
+      "role": "endpoint",
+      "flowType": "passthru",
+      "attributes": [
+        {
+          "name": "timeout",
+          "type": "number"
+        }
+      ],
+      "childGroup": {
+        "indicator": "sequence",
+        "children": [
+          {
+            "name": "header"
+          }
+        ]
+      }
+    }
+  ],
+  "ns2": [
+    {
+      "name": "filter",
+      "role": "endpoint",
+      "flowType": "passthru",
+      "attributes": [
+        {
+          "name": "delay",
+          "type": "number"
+        }
+      ],
+      "childGroup": {
+        "indicator": "sequence",
+        "children": [
+          {
+            "name": "poller"
+          }
+        ]
+      }
+    }
+  ]
+}

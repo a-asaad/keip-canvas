@@ -1,7 +1,7 @@
 package com.octo.keip.schema.model.eip;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +10,7 @@ public class EipSchema {
   private final Map<String, List<EipComponent>> eipComponentMap;
 
   public EipSchema() {
-    this.eipComponentMap = new HashMap<>();
+    this.eipComponentMap = new LinkedHashMap<>();
   }
 
   private EipSchema(Map<String, List<EipComponent>> eipComponentMap) {

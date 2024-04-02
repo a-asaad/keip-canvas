@@ -1,0 +1,15 @@
+schemas:
+  - alias: "first"
+    namespace: "http://www.example.com/first"
+    location: "http://localhost:8080/first.xsd"
+    excludedElements:
+      - "excluded1"
+      - "excluded2"
+  - alias: "second"
+    namespace: "http://www.example.com/second"
+    location: "http://localhost:8080/second.xsd"
+importedSchemaLocations:
+  - namespace: "http://www.example.com/extras"
+    location: "http://localhost:8080/extras.xsd"
+  - namespace: "http://www.example.com/more-extras"
+    location: "http://localhost:8080/more-extras.xsd"

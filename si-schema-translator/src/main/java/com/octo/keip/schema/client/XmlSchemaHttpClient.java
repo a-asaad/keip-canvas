@@ -1,4 +1,4 @@
-package com.octo.keip.schema.http;
+package com.octo.keip.schema.client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Fetches remote XML schemas using HTTP and read them into an {@link XmlSchemaCollection}. */
-public class XmlSchemaHttpClient {
+public class XmlSchemaHttpClient implements XmlSchemaClient {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(XmlSchemaHttpClient.class);
 
@@ -36,11 +36,12 @@ public class XmlSchemaHttpClient {
     this.httpClient = HttpClient.newBuilder().connectTimeout(CONNECTION_TIMEOUT).build();
   }
 
-  public XmlSchemaHttpClient(HttpClient httpClient, Map<String, URI> additionalSchemaLocations) {
+  XmlSchemaHttpClient(HttpClient httpClient, Map<String, URI> additionalSchemaLocations) {
     this.additionalSchemaLocations = additionalSchemaLocations;
     this.httpClient = httpClient;
   }
 
+  @Override
   public XmlSchemaCollection collect(String targetNamespace, URI schemaLocation)
       throws IOException, InterruptedException {
     LOGGER.info("Fetching target schema xml at: {}", schemaLocation);

@@ -1,6 +1,5 @@
-package com.octo.keip.schema.xml.http
+package com.octo.keip.schema.client
 
-import com.octo.keip.schema.http.XmlSchemaHttpClient
 import org.apache.ws.commons.schema.XmlSchemaCollection
 import spock.lang.Specification
 

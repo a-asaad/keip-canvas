@@ -4,14 +4,18 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
-public class SchemaRetrievalConfiguration {
+public class XmlSchemaSourceConfiguration {
 
   private List<SchemaIdentifier> schemas;
+
+  private List<SchemaIdentifier> importedSchemaLocations;
 
   public List<SchemaIdentifier> getSchemas() {
     return schemas;
@@ -21,17 +25,28 @@ public class SchemaRetrievalConfiguration {
     this.schemas = schemas;
   }
 
-  public static SchemaRetrievalConfiguration readYaml(InputStream is) {
-    Yaml yaml = new Yaml(new Constructor(SchemaRetrievalConfiguration.class, new LoaderOptions()));
-    return yaml.loadAs(is, SchemaRetrievalConfiguration.class);
+  List<SchemaIdentifier> getImportedSchemaLocations() {
+    return importedSchemaLocations;
+  }
+
+  public Map<String, URI> getImportedSchemaLocationsMap() {
+    return importedSchemaLocations.stream()
+        .collect(Collectors.toMap(SchemaIdentifier::getNamespace, SchemaIdentifier::getLocation));
+  }
+
+  public void setImportedSchemaLocations(List<SchemaIdentifier> importedSchemaLocations) {
+    this.importedSchemaLocations = importedSchemaLocations;
+  }
+
+  public static XmlSchemaSourceConfiguration readYaml(InputStream is) {
+    Yaml yaml = new Yaml(new Constructor(XmlSchemaSourceConfiguration.class, new LoaderOptions()));
+    return yaml.loadAs(is, XmlSchemaSourceConfiguration.class);
   }
 
   public static class SchemaIdentifier {
     private String alias;
     private String namespace;
     private URI location;
-
-    private List<SchemaIdentifier> importedSchemas = Collections.emptyList();
 
     private Set<String> excludedElements = Collections.emptySet();
 
@@ -45,10 +60,6 @@ public class SchemaRetrievalConfiguration {
 
     public URI getLocation() {
       return location;
-    }
-
-    public List<SchemaIdentifier> getImportedSchemas() {
-      return importedSchemas;
     }
 
     public Set<String> getExcludedElements() {
@@ -65,10 +76,6 @@ public class SchemaRetrievalConfiguration {
 
     public void setLocation(URI location) {
       this.location = location;
-    }
-
-    public void setImportedSchemas(List<SchemaIdentifier> importedSchemas) {
-      this.importedSchemas = importedSchemas;
     }
 
     public void setExcludedElements(Set<String> excludedElements) {
