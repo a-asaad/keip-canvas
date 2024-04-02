@@ -1,0 +1,35 @@
+schemas:
+  - alias: "integration"
+    namespace: "http://www.springframework.org/schema/integration"
+    location: "https://www.springframework.org/schema/integration/spring-integration-5.2.xsd"
+    excludedElements:
+      - "selector-chain"
+      - "spel-property-accessors"
+      - "converter"
+      - "chain"
+
+  - alias: "jms"
+    namespace: "http://www.springframework.org/schema/integration/jms"
+    location: "https://www.springframework.org/schema/integration/jms/spring-integration-jms-5.2.xsd"
+
+  - alias: "http"
+    namespace: "http://www.springframework.org/schema/integration/http"
+    location: "https://www.springframework.org/schema/integration/http/spring-integration-http-5.2.xsd"
+
+  - alias: "file"
+    namespace: "http://www.springframework.org/schema/integration/file"
+    location: "https://www.springframework.org/schema/integration/file/spring-integration-file-5.2.xsd"
+
+  - alias: "kafka"
+    namespace: "http://www.springframework.org/schema/integration/kafka"
+    location: "https://www.springframework.org/schema/integration/kafka/spring-integration-kafka-3.1.xsd"
+
+  - alias: "groovy"
+    namespace: "http://www.springframework.org/schema/integration/groovy"
+    location: "https://www.springframework.org/schema/integration/groovy/spring-integration-groovy-5.2.xsd"
+
+importedSchemaLocations:
+  - namespace: "http://www.springframework.org/schema/beans"
+    location: "https://www.springframework.org/schema/beans/spring-beans-4.3.xsd"
+  - namespace: "http://www.springframework.org/schema/tool"
+    location: "https://www.springframework.org/schema/tool/spring-tool-4.3.xsd"
