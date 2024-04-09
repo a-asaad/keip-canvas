@@ -42,7 +42,7 @@ const FlowCanvas = () => {
   // to avoid having to clear the selection in multiple components.
 
   return (
-    <div style={{ width: "100%", height: "calc(100vh - 3rem)" }} ref={drop}>
+    <div className="canvas" ref={drop}>
       <ReactFlow
         nodes={flowStore.nodes}
         edges={flowStore.edges}
