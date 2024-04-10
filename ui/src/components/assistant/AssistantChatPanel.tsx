@@ -1,6 +1,7 @@
 import {
   Button,
   IconButton,
+  InlineLoading,
   Stack,
   TableToolbar,
   TableToolbarContent,
@@ -9,24 +10,33 @@ import {
 } from "@carbon/react"
 import { Send } from "@carbon/react/icons"
 import { useState } from "react"
+import { promptModel } from "./llmClient"
 
 interface ChatHistoryProps {
   entries: string[]
 }
 
 interface ChatInputProps {
-  handleInput: (input: string) => void
+  handleInput: (input: string) => Promise<void>
 }
 
 const ChatInput = ({ handleInput }: ChatInputProps) => {
   const [content, setContent] = useState("")
+  const [isWaiting, setWaiting] = useState(false)
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleInput(content)
-      setContent("")
+      if (content.length > 0) {
+        setWaiting(true)
+        handleInput(content)
+          .then(() => setContent(""))
+          .catch((err) => console.error(err))
+          .finally(() => setWaiting(false))
+      }
     }
   }
+
   return (
     <div className="chat-input-container">
       <TextArea
@@ -37,10 +47,16 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
+        disabled={isWaiting}
       />
-      <IconButton label="send" size="md">
-        <Send />
-      </IconButton>
+
+      {isWaiting ? (
+        <InlineLoading className="chat-input-waiting" status="active" />
+      ) : (
+        <IconButton label="send" size="md" disabled={content.length === 0}>
+          <Send />
+        </IconButton>
+      )}
     </div>
   )
 }
@@ -51,7 +67,7 @@ const ChatHistory = ({ entries }: ChatHistoryProps) => {
       <Stack gap={5}>
         {entries.map((entry, idx) => (
           <span key={idx} className="chat-history-entry">
-            {entry}
+            <p>{entry}</p>
           </span>
         ))}
       </Stack>
@@ -63,7 +79,9 @@ const AssistantChatPanel = () => {
   const [isOpen, setOpen] = useState(false)
   const [chatEntries, setChatEntries] = useState<string[]>([])
 
-  const addEntry = (input: string) => {
+  const sendPrompt = async (input: string) => {
+    const response = await promptModel(input)
+    console.log(response)
     setChatEntries((prev) => [...prev, input])
   }
 
@@ -87,7 +105,7 @@ const AssistantChatPanel = () => {
       {isOpen && (
         <>
           <ChatHistory entries={chatEntries} />
-          <ChatInput handleInput={addEntry} />
+          <ChatInput handleInput={sendPrompt} />
         </>
       )}
     </div>

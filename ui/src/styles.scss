@@ -79,6 +79,12 @@
     @include type.type-style("body-compact-02");
     background-color: themes.$layer-02;
   }
+
+  .chat-input-waiting {
+    inline-size: 2.5rem;
+    justify-content: center;
+    align-items: flex-start;
+  }
 }
 
 .node-chooser-panel {
