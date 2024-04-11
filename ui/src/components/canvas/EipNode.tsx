@@ -2,9 +2,10 @@ import { Button, Stack, Tile } from "@carbon/react"
 import { Handle, NodeProps, Position } from "reactflow"
 
 import { ServiceId } from "@carbon/react/icons"
-import { FlowType } from "../../api/eipSchema"
+import { FlowType, Role } from "../../api/eipSchema"
 import { EipNodeData } from "../../api/flow"
 import { ChildNodeId, EipId } from "../../api/id"
+import { lookupEipComponent } from "../../singletons/eipDefinitions"
 import getIconUrl from "../../singletons/eipIconCatalog"
 import {
   useAppActions,
@@ -48,9 +49,9 @@ const getNamespacedTitle = (eipId: EipId) => {
   return toTitleCase(eipId.namespace) + " " + toTitleCase(eipId.name)
 }
 
-const getClassNames = (props: NodeProps<EipNodeData>) => {
+const getClassNames = (props: NodeProps<EipNodeData>, role: Role) => {
   const roleClsName =
-    props.data.role === "channel" ? "eip-channel-node" : "eip-endpoint-node"
+    role === "channel" ? "eip-channel-node" : "eip-endpoint-node"
   const selectedClsName = props.selected ? "eip-node-selected" : ""
   return ["eip-node", roleClsName, selectedClsName].join(" ")
 }
@@ -99,11 +100,12 @@ const EipNode = (props: NodeProps<EipNodeData>) => {
   const hasChildren = childrenState.length > 0
 
   const { data } = props
-  const handles = renderHandles(data.flowType)
+  const componentDefinition = lookupEipComponent(data.eipId)!
+  const handles = renderHandles(componentDefinition.flowType)
 
   return (
     <Tile
-      className={getClassNames(props)}
+      className={getClassNames(props, componentDefinition.role)}
       onClick={hasChildren ? () => clearSelectedChildNode() : undefined}
     >
       <div>{getNamespacedTitle(data.eipId)}</div>

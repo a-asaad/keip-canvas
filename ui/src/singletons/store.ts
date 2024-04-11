@@ -20,7 +20,6 @@ import { useShallow } from "zustand/react/shallow"
 import { AttributeTypes } from "../api/eipSchema"
 import { EIP_NODE_KEY, EipFlowNode } from "../api/flow"
 import { ChildNodeId, EipId, areChildIdsEqual } from "../api/id"
-import { lookupEipComponent } from "./eipDefinitions"
 
 export const ROOT_PARENT = "root"
 
@@ -58,6 +57,8 @@ interface AppActions {
   clearSelectedChildNode: () => void
 
   clearFlow: () => void
+
+  importFlowFromJson: (json: string) => void
 }
 
 interface AppStore {
@@ -158,6 +159,20 @@ const useStore = create<AppStore>()(
             eipNodeConfigs: {},
             selectedChildNode: null,
           })),
+
+        importFlowFromJson: (json: string) =>
+          set(() => {
+            const imported = JSON.parse(json) as Partial<AppStore>
+            if (isStoreType(imported)) {
+              return {
+                nodes: imported.nodes,
+                edges: imported.edges,
+                eipNodeConfigs: imported.eipNodeConfigs,
+              }
+            }
+            console.error("Failed to import an EIP flow JSON. Malformed input")
+            return {}
+          }),
       },
     }),
     {
@@ -173,7 +188,6 @@ const useStore = create<AppStore>()(
 
 const newNode = (eipId: EipId, position: XYPosition) => {
   const id = nanoid(10)
-  const nodeSchema = lookupEipComponent(eipId)!
   const node: EipFlowNode = {
     id: id,
     type: EIP_NODE_KEY,
@@ -181,8 +195,6 @@ const newNode = (eipId: EipId, position: XYPosition) => {
     data: {
       eipId: eipId,
       label: "New Node",
-      flowType: nodeSchema.flowType,
-      role: nodeSchema.role,
     },
   }
   return node
@@ -200,6 +212,15 @@ const removeDeletedNodeConfigs = (state: AppStore, changes: NodeChange[]) => {
   const updatedConfigs = { ...state.eipNodeConfigs }
   deletes.forEach((c) => delete updatedConfigs[c.id])
   return updatedConfigs
+}
+
+const isStoreType = (state: unknown): state is AppStore => {
+  const store = state as AppStore
+  return (
+    store.nodes !== undefined &&
+    store.edges !== undefined &&
+    store.eipNodeConfigs !== undefined
+  )
 }
 
 export const useNodeCount = () => useStore((state) => state.nodes.length)
