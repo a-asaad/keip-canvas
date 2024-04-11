@@ -206,6 +206,15 @@ export const useNodeCount = () => useStore((state) => state.nodes.length)
 
 export const useGetNodes = () => useStore((state) => state.nodes)
 
+export const useSerializedStore = () =>
+  useStore((state) =>
+    JSON.stringify({
+      nodes: state.nodes,
+      edges: state.edges,
+      eipNodeConfigs: state.eipNodeConfigs,
+    })
+  )
+
 export const useGetEipAttribute = (
   id: string,
   parentId: string,

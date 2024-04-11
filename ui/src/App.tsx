@@ -12,7 +12,7 @@ import AssistantChatPanel from "./components/assistant/AssistantChatPanel"
 import FlowCanvas from "./components/canvas/FlowCanvas"
 import EipConfigSidePanel from "./components/config-panel/EipConfigSidePanel"
 import NodeChooserPanel from "./components/draggable-panel/NodeChooserPanel"
-import ExportToPngButton from "./components/export/exportToPng"
+import OptionsMenu from "./components/options-menu/OptionsMenu"
 
 const App = () => (
   <>
@@ -23,7 +23,7 @@ const App = () => (
             Keip Canvas
           </HeaderName>
           <HeaderGlobalBar className="header-action-bar">
-            <ExportToPngButton />
+            <OptionsMenu />
           </HeaderGlobalBar>
         </Header>
       </Column>

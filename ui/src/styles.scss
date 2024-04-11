@@ -37,6 +37,18 @@
   svg.header-icon {
     fill: themes.$icon-inverse !important;
   }
+
+  .options-menu:hover {
+    background-color: themes.$background-inverse-hover;
+  }
+
+  .options-menu.cds--overflow-menu--open {
+    background-color: themes.$background-inverse-hover;
+  }
+
+  .options-menu-icon {
+    fill: themes.$icon-inverse;
+  }
 }
 
 .canvas {
@@ -151,6 +163,7 @@
   // TODO: fine-tune the width
   width: 25vw;
   max-width: 25rem;
+  z-index: 100;
 
   .form-input-label {
     margin-bottom: layout.$spacing-03;
