@@ -1,6 +1,7 @@
 import { OverflowMenu } from "@carbon/react"
 import { Menu } from "@carbon/react/icons"
 import ExportPng from "./ExportPng"
+import ExportXml from "./ExportXml"
 import SaveDiagram from "./SaveDiagram"
 
 const OptionsMenu = () => {
@@ -18,6 +19,7 @@ const OptionsMenu = () => {
       {/* OverflowMenu does not play nice when OverflowMenuItems are not direct children. Custom components will need to use forwardRef to avoid errors. */}
       <SaveDiagram />
       <ExportPng />
+      <ExportXml />
     </OverflowMenu>
   )
 }

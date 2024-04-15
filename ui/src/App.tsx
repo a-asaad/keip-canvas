@@ -28,11 +28,11 @@ const App = () => (
         </Header>
       </Column>
 
-      <Column sm={1} md={2} lg={3}>
+      <Column sm={1} md={2} lg={3} xlg={3} max={2}>
         <NodeChooserPanel />
       </Column>
 
-      <Column sm={3} md={6} lg={13}>
+      <Column sm={3} md={6} lg={13} xlg={13} max={14}>
         <FlowCanvas />
       </Column>
 
