@@ -10,7 +10,7 @@ import { useEffect, useState } from "react"
 import { DragPreviewImage, useDrag } from "react-dnd"
 import { EipComponent } from "../../api/eipSchema"
 import { EipId } from "../../api/id"
-import { EIP_COMPONENTS } from "../../singletons/eipDefinitions"
+import { EIP_SCHEMA } from "../../singletons/eipDefinitions"
 import getIconUrl from "../../singletons/eipIconCatalog"
 import { useNodeCount } from "../../singletons/store"
 import { toTitleCase } from "../../utils/titleTransform"
@@ -109,7 +109,7 @@ const NodeChooserPanel = () => {
   }
 
   const collections = namespacesToDisplay(
-    Object.entries(EIP_COMPONENTS),
+    Object.entries(EIP_SCHEMA),
     searchTerm
   ).map((ns) => (
     <EipNamespaceCollection

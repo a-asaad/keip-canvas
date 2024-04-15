@@ -3,7 +3,7 @@ import { EipId } from "../api/id"
 import eipDefintion from "../json/springIntegrationEipSchema.json"
 
 // TODO: Validate that the parsed JSON matches the schema type
-export const EIP_COMPONENTS: Readonly<EipSchema> = eipDefintion as EipSchema
+export const EIP_SCHEMA: Readonly<EipSchema> = eipDefintion as EipSchema
 
 const getFlatMap = (schema: EipSchema) => {
   const map = new Map<string, EipComponent>()
@@ -13,7 +13,7 @@ const getFlatMap = (schema: EipSchema) => {
   return map
 }
 
-const componentFlatMap = getFlatMap(EIP_COMPONENTS)
+const componentFlatMap = getFlatMap(EIP_SCHEMA)
 
 export const lookupEipComponent = (eipId: EipId) => {
   const component = componentFlatMap.get(`${eipId.namespace}.${eipId.name}`)

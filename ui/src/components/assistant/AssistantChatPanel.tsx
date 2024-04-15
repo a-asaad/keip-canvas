@@ -24,16 +24,20 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
   const [content, setContent] = useState("")
   const [isWaiting, setWaiting] = useState(false)
 
+  const submit = () => {
+    if (content.length > 0) {
+      setWaiting(true)
+      handleInput(content)
+        .then(() => setContent(""))
+        .catch((err) => console.error(err))
+        .finally(() => setWaiting(false))
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      if (content.length > 0) {
-        setWaiting(true)
-        handleInput(content)
-          .then(() => setContent(""))
-          .catch((err) => console.error(err))
-          .finally(() => setWaiting(false))
-      }
+      submit()
     }
   }
 
@@ -53,7 +57,12 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
       {isWaiting ? (
         <InlineLoading className="chat-input-waiting" status="active" />
       ) : (
-        <IconButton label="send" size="md" disabled={content.length === 0}>
+        <IconButton
+          label="send"
+          size="md"
+          disabled={content.length === 0}
+          onClick={submit}
+        >
           <Send />
         </IconButton>
       )}
@@ -102,6 +111,7 @@ const AssistantChatPanel = () => {
         </TableToolbarContent>
       </TableToolbar>
 
+      {/* TODO: Ensure request is still processing if panel is collapsed */}
       {isOpen && (
         <>
           <ChatHistory entries={chatEntries} />
