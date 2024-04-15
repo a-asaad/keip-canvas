@@ -12,17 +12,32 @@ import { useAppActions, useFlowStore } from "../../singletons/store"
 import "reactflow/dist/base.css"
 
 import { TrashCan } from "@carbon/icons-react"
+import { ErrorBoundary } from "@carbon/react"
 import { DropTargetMonitor, useDrop } from "react-dnd"
 import { NativeTypes } from "react-dnd-html5-backend"
 import { EipId } from "../../api/id"
 import { DragTypes } from "../draggable-panel/dragTypes"
 import EipNode from "./EipNode"
 
+const FLOW_ERROR_MESSAGE =
+  "Failed to load the canvas - the stored flow is malformed. Clearing the flow from the state store."
+
 interface FileDrop {
   files: File[]
 }
 
 type DropType = EipId | FileDrop
+
+interface ErrorHandlerProps {
+  message: string
+  callback: () => void
+}
+
+const ErrorHandler = ({ message, callback }: ErrorHandlerProps) => {
+  console.error(message)
+  callback()
+  return null
+}
 
 const acceptDroppedFile = (file: File, importFlow: (json: string) => void) => {
   const reader = new FileReader()
@@ -85,26 +100,35 @@ const FlowCanvas = () => {
   // TODO: See if there is a better way to select and clear child nodes,
   // to avoid having to clear the selection in multiple components.
 
+  // TODO: ErrorHandler clears the flow on-error in order to recover in the case of a
+  // malformed flow import. Consider less destructive options.
+
   return (
     <div className="canvas" ref={drop}>
-      <ReactFlow
-        nodes={flowStore.nodes}
-        edges={flowStore.edges}
-        onNodesChange={flowStore.onNodesChange}
-        onEdgesChange={flowStore.onEdgesChange}
-        onConnect={flowStore.onConnect}
-        nodeTypes={nodeTypes}
-        onPaneClick={() => clearSelectedChildNode()}
-        fitView
+      <ErrorBoundary
+        fallback={
+          <ErrorHandler message={FLOW_ERROR_MESSAGE} callback={clearFlow} />
+        }
       >
-        <Controls>
-          <ControlButton title="clear" onClick={clearFlow}>
-            <TrashCan />
-          </ControlButton>
-        </Controls>
-        {/* <MiniMap /> */}
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-      </ReactFlow>
+        <ReactFlow
+          nodes={flowStore.nodes}
+          edges={flowStore.edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={flowStore.onNodesChange}
+          onEdgesChange={flowStore.onEdgesChange}
+          onConnect={flowStore.onConnect}
+          onPaneClick={() => clearSelectedChildNode()}
+          fitView
+        >
+          <Controls>
+            <ControlButton title="clear" onClick={clearFlow}>
+              <TrashCan />
+            </ControlButton>
+          </Controls>
+          {/* <MiniMap /> */}
+          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        </ReactFlow>
+      </ErrorBoundary>
     </div>
   )
 }
