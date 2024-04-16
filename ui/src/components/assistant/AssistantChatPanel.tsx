@@ -10,6 +10,7 @@ import {
 } from "@carbon/react"
 import { Send } from "@carbon/react/icons"
 import { useState } from "react"
+import { useAppActions } from "../../singletons/store"
 import { promptModel } from "./llmClient"
 
 interface ChatHistoryProps {
@@ -85,12 +86,15 @@ const ChatHistory = ({ entries }: ChatHistoryProps) => {
 }
 
 const AssistantChatPanel = () => {
+  // TODO: Create a new action to set nodes/edges directly from object
+  const { importFlowFromJson } = useAppActions()
   const [isOpen, setOpen] = useState(false)
   const [chatEntries, setChatEntries] = useState<string[]>([])
 
   const sendPrompt = async (input: string) => {
     const response = await promptModel(input)
     console.log(response)
+    importFlowFromJson(response)
     setChatEntries((prev) => [...prev, input])
   }
 
@@ -112,6 +116,7 @@ const AssistantChatPanel = () => {
       </TableToolbar>
 
       {/* TODO: Ensure request is still processing if panel is collapsed */}
+      {/* TODO: Display an error pop-up if LLM prompt fails  */}
       {isOpen && (
         <>
           <ChatHistory entries={chatEntries} />

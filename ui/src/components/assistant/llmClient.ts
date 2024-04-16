@@ -1,6 +1,15 @@
 import { Ollama } from "@langchain/community/llms/ollama"
 import { PromptTemplate } from "langchain/prompts"
+import { Edge } from "reactflow"
+import { EipFlowNode } from "../../api/flow"
 import { EIP_SCHEMA } from "../../singletons/eipDefinitions"
+import { getLayoutedNodes } from "./nodeLayouting"
+
+interface ModelFlowResponse {
+  nodes: EipFlowNode[]
+  edges: Edge[]
+  eipNodeConfigs: Record<string, object>
+}
 
 const responseJsonExample = `{
   "nodes": [
@@ -58,22 +67,50 @@ const promptTemplate = PromptTemplate.fromTemplate(
   {responseFormat}
   END_FLOW_SCHEMA
 
-  each node's data.eipId field corresponds to a Spring Integration component and must come from the following mapping of namespace to component name:
+  each node's data.eipId field corresponds to a Spring Integration component and MUST come from the following mapping of namespace to component name:
 
   START_EIP_COMPONENT_MAPPING
   {eipIds}
   END_EIP_COMPONENT_MAPPING
 
-  Taking the above into account. Respond to the following request:
+  Avoid adding any explicit channels to the flow
+
+  Taking the above into account, respond to the following request:
   {userInput}`
 )
 
 const chain = promptTemplate.pipe(llm)
 
 export const promptModel = async (userInput: string) => {
-  return await chain.invoke({
+  const rawResponse = await chain.invoke({
     responseFormat: responseJsonExample,
     eipIds: eipIdsJson,
     userInput: userInput,
   })
+  return responseParser(rawResponse)
+}
+
+// TODO: Use Langchain custom output parser
+// TODO: Return an object rather than a JSON string
+const responseParser = (jsonResponse: string) => {
+  const response = JSON.parse(jsonResponse) as ModelFlowResponse
+  if (!response.nodes) {
+    throw new Error("No nodes provided in model response: " + jsonResponse)
+  }
+
+  if (!response.edges) {
+    if (response.nodes.length == 1) {
+      response.edges = []
+    } else {
+      throw new Error("No edges provided in model response: " + jsonResponse)
+    }
+  }
+
+  if (!response.eipNodeConfigs) {
+    response.eipNodeConfigs = {}
+  }
+
+  response.nodes = getLayoutedNodes(response.nodes, response.edges)
+
+  return JSON.stringify(response)
 }
