@@ -1,4 +1,5 @@
 import { PromptTemplate } from "@langchain/core/prompts"
+import { EipId } from "../../api/id"
 import { EIP_SCHEMA } from "../../singletons/eipDefinitions"
 
 const responseJsonExample = `{
@@ -37,8 +38,9 @@ const responseJsonExample = `{
 // TODO: Do this async instead?
 const eipIds = Object.entries(EIP_SCHEMA).reduce((acc, curr) => {
   const [namespace, components] = curr
-  return { ...acc, [namespace]: components.map((c) => c.name) }
-}, {})
+  const ids = components.map((c) => ({ namespace: namespace, name: c.name }))
+  return [...acc, ...ids]
+}, [] as EipId[])
 
 const eipIdsJson = JSON.stringify(eipIds)
 
@@ -50,11 +52,11 @@ START_FLOW_SCHEMA
 \`\`\`
 END_FLOW_SCHEMA
 
-each node's data.eipId field corresponds to a Spring Integration component and MUST come from the following mapping of namespace to component name:
+each node's data.eipId field corresponds to a Spring Integration component and MUST be chosen from the following list of eipIds:
 
-START_EIP_COMPONENT_MAPPING
+START_EIP_COMPONENT_LIST
 {eipIds}
-END_EIP_COMPONENT_MAPPING
+END_EIP_COMPONENT_LIST
 
 Avoid adding any explicit channels to the flow
 

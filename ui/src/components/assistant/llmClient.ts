@@ -10,55 +10,90 @@ interface ModelFlowResponse {
   eipNodeConfigs: Record<string, object>
 }
 
-const llm = new Ollama({
-  baseUrl: "http://localhost:11434",
-  maxRetries: 3,
-  model: "mistral",
-  format: "json",
-  numCtx: 4096,
-  // temperature: 0,
-})
-
-const chain = partialPrompt.pipe(llm)
-
-export const promptModel = async (
-  userInput: string,
-  streamCallback: (chunk: string) => void
-) => {
-  const responseStream = await chain.stream({
-    userInput: userInput,
-  })
-
-  let rawResponse = ""
-  for await (const chunk of responseStream) {
-    rawResponse += chunk
-    streamCallback(chunk)
-  }
-
-  return responseParser(rawResponse)
+interface PromptResponse {
+  data: string
+  success: boolean
+  cause?: Error | "aborted"
 }
 
-// TODO: Use Langchain custom output parser
-// TODO: Return an object rather than a JSON string
-const responseParser = (jsonResponse: string) => {
-  const response = JSON.parse(jsonResponse) as ModelFlowResponse
-  if (!response.nodes) {
-    throw new Error("No nodes provided in model response: " + jsonResponse)
+class LlmClient {
+  private llm
+  private chain
+  private abortCtrl
+
+  constructor() {
+    this.llm = new Ollama({
+      baseUrl: "http://localhost:11434",
+      maxRetries: 3,
+      model: "mistral",
+      format: "json",
+      numCtx: 4096,
+      temperature: 0,
+    })
+
+    this.chain = partialPrompt.pipe(this.llm)
+    this.abortCtrl = new AbortController()
   }
 
-  if (!response.edges) {
-    if (response.nodes.length == 1) {
-      response.edges = []
-    } else {
-      throw new Error("No edges provided in model response: " + jsonResponse)
+  public async prompt(
+    userInput: string,
+    streamCallback: (chunk: string) => void
+  ): Promise<PromptResponse> {
+    let rawResponse = ""
+    try {
+      const responseStream = await this.chain.stream({
+        userInput: userInput,
+      })
+
+      for await (const chunk of responseStream) {
+        if (this.abortCtrl.signal.aborted) {
+          this.abortCtrl = new AbortController()
+          return { data: rawResponse, success: false, cause: "aborted" }
+        }
+
+        rawResponse += chunk
+        streamCallback(chunk)
+      }
+
+      return { data: this.parseResponse(rawResponse), success: true }
+    } catch (err) {
+      console.error(err)
+      return {
+        data: rawResponse,
+        success: false,
+        cause: err as Error,
+      }
     }
   }
 
-  if (!response.eipNodeConfigs) {
-    response.eipNodeConfigs = {}
+  public abort(): void {
+    this.abortCtrl.abort()
   }
 
-  response.nodes = getLayoutedNodes(response.nodes, response.edges)
+  // TODO: Use Langchain custom output parser
+  // TODO: Return an object rather than a JSON string
+  private parseResponse(jsonResponse: string): string {
+    const response = JSON.parse(jsonResponse) as ModelFlowResponse
+    if (!response.nodes) {
+      throw new Error("No nodes provided in model response: " + jsonResponse)
+    }
 
-  return JSON.stringify(response)
+    if (!response.edges) {
+      if (response.nodes.length == 1) {
+        response.edges = []
+      } else {
+        throw new Error("No edges provided in model response: " + jsonResponse)
+      }
+    }
+
+    if (!response.eipNodeConfigs) {
+      response.eipNodeConfigs = {}
+    }
+
+    response.nodes = getLayoutedNodes(response.nodes, response.edges)
+
+    return JSON.stringify(response)
+  }
 }
+
+export default LlmClient

@@ -13,7 +13,7 @@ import { CloseOutline, Send } from "@carbon/react/icons"
 import { interactive } from "@carbon/themes"
 import { useState } from "react"
 import { useAppActions } from "../../singletons/store"
-import { promptModel } from "./llmClient"
+import LlmClient from "./llmClient"
 
 type ChatEntrySource = "user" | "AI"
 
@@ -30,6 +30,8 @@ interface ChatHistoryProps {
 interface ChatInputProps {
   handleInput: (input: string) => Promise<void>
 }
+
+const llmClient = new LlmClient()
 
 const ChatInput = ({ handleInput }: ChatInputProps) => {
   const [content, setContent] = useState("")
@@ -76,6 +78,7 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
             hasIconOnly
             iconDescription="cancel"
             renderIcon={() => <CloseOutline size={24} />}
+            onClick={() => llmClient.abort()}
           />
         </>
       ) : (
@@ -123,23 +126,22 @@ const AssistantChatPanel = () => {
   const { importFlowFromJson } = useAppActions()
   const [isOpen, setOpen] = useState(false)
   const [chatEntries, setChatEntries] = useState<ChatEntry[]>([])
-  const [activeResponse, setActiveResponse] = useState("")
+  const [streamingResponse, setStreamingResponse] = useState("")
 
-  const updateResponseChunk = (chunk: string) =>
-    setActiveResponse((prev) => prev + chunk)
+  const handleStreamUpdate = (chunk: string) =>
+    setStreamingResponse((prev) => prev + chunk)
 
   const sendPrompt = async (input: string) => {
-    try {
-      const response = await promptModel(input, updateResponseChunk)
-      importFlowFromJson(response)
-      setChatEntries((prev) => [
-        ...prev,
-        { message: input, source: "user" },
-        { message: response, source: "AI" },
-      ])
-    } finally {
-      setActiveResponse("")
+    const response = await llmClient.prompt(input, handleStreamUpdate)
+    if (response.success) {
+      importFlowFromJson(response.data)
     }
+    setChatEntries((prev) => [
+      ...prev,
+      { message: input, source: "user" },
+      { message: response.data, source: "AI" },
+    ])
+    setStreamingResponse("")
   }
 
   const display = isOpen ? { height: "30vh" } : { height: "2rem" }
@@ -165,7 +167,7 @@ const AssistantChatPanel = () => {
         <>
           <ChatHistory
             entries={chatEntries}
-            streamingResponse={activeResponse}
+            streamingResponse={streamingResponse}
           />
           <ChatInput handleInput={sendPrompt} />
         </>
