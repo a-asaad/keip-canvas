@@ -1,56 +1,14 @@
 import { Ollama } from "@langchain/community/llms/ollama"
-import { PromptTemplate } from "langchain/prompts"
 import { Edge } from "reactflow"
 import { EipFlowNode } from "../../api/flow"
-import { EIP_SCHEMA } from "../../singletons/eipDefinitions"
 import { getLayoutedNodes } from "./nodeLayouting"
+import { partialPrompt } from "./prompt"
 
 interface ModelFlowResponse {
   nodes: EipFlowNode[]
   edges: Edge[]
   eipNodeConfigs: Record<string, object>
 }
-
-const responseJsonExample = `{
-  "nodes": [
-    {
-      "id": "n1",
-      "type": "eipNode",
-      "data": {
-        "eipId": {
-          "namespace": "integration",
-          "name": "inbound-channel-adapter"
-        }
-      }
-    },
-    {
-        "id": "n2",
-        "type": "eipNode",
-        "data": {
-          "eipId": {
-            "namespace": "http",
-            "name": "outbound-gateway"
-          }
-        }
-      }
-  ],
-  "edges": [
-    {
-      "source": "n1",
-      "target": "n2",
-      "id": "edge_n1_n2"
-    }
-  ]
-}
-`
-
-// TODO: Do this async instead?
-const eipIds = Object.entries(EIP_SCHEMA).reduce((acc, curr) => {
-  const [namespace, components] = curr
-  return { ...acc, [namespace]: components.map((c) => c.name) }
-}, {})
-
-const eipIdsJson = JSON.stringify(eipIds)
 
 const llm = new Ollama({
   baseUrl: "http://localhost:11434",
@@ -61,32 +19,22 @@ const llm = new Ollama({
   // temperature: 0,
 })
 
-const promptTemplate = PromptTemplate.fromTemplate(
-  `The response MUST only be a JSON that matches the following flow schema:
-  START_FLOW_SCHEMA
-  {responseFormat}
-  END_FLOW_SCHEMA
+const chain = partialPrompt.pipe(llm)
 
-  each node's data.eipId field corresponds to a Spring Integration component and MUST come from the following mapping of namespace to component name:
-
-  START_EIP_COMPONENT_MAPPING
-  {eipIds}
-  END_EIP_COMPONENT_MAPPING
-
-  Avoid adding any explicit channels to the flow
-
-  Taking the above into account, respond to the following request:
-  {userInput}`
-)
-
-const chain = promptTemplate.pipe(llm)
-
-export const promptModel = async (userInput: string) => {
-  const rawResponse = await chain.invoke({
-    responseFormat: responseJsonExample,
-    eipIds: eipIdsJson,
+export const promptModel = async (
+  userInput: string,
+  streamCallback: (chunk: string) => void
+) => {
+  const responseStream = await chain.stream({
     userInput: userInput,
   })
+
+  let rawResponse = ""
+  for await (const chunk of responseStream) {
+    rawResponse += chunk
+    streamCallback(chunk)
+  }
+
   return responseParser(rawResponse)
 }
 

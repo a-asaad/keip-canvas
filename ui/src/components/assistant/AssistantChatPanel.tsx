@@ -1,3 +1,4 @@
+import { magenta50 } from "@carbon/colors"
 import {
   Button,
   IconButton,
@@ -8,13 +9,22 @@ import {
   TextArea,
   Tile,
 } from "@carbon/react"
-import { Send } from "@carbon/react/icons"
+import { CloseOutline, Send } from "@carbon/react/icons"
+import { interactive } from "@carbon/themes"
 import { useState } from "react"
 import { useAppActions } from "../../singletons/store"
 import { promptModel } from "./llmClient"
 
+type ChatEntrySource = "user" | "AI"
+
+interface ChatEntry {
+  message: string
+  source: ChatEntrySource
+}
+
 interface ChatHistoryProps {
-  entries: string[]
+  entries: ChatEntry[]
+  streamingResponse?: string
 }
 
 interface ChatInputProps {
@@ -48,6 +58,7 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
         id="chat-input"
         labelText="chat-input"
         hideLabel
+        placeholder="Enter Prompt..."
         rows={1}
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -56,11 +67,21 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
       />
 
       {isWaiting ? (
-        <InlineLoading className="chat-input-waiting" status="active" />
+        <>
+          <InlineLoading className="chat-input-waiting" status="active" />
+          <Button
+            style={{ paddingBlockStart: "11px" }}
+            size="lg"
+            kind="danger--tertiary"
+            hasIconOnly
+            iconDescription="cancel"
+            renderIcon={() => <CloseOutline size={24} />}
+          />
+        </>
       ) : (
         <IconButton
-          label="send"
-          size="md"
+          label="submit"
+          size="lg"
           disabled={content.length === 0}
           onClick={submit}
         >
@@ -71,13 +92,25 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
   )
 }
 
-const ChatHistory = ({ entries }: ChatHistoryProps) => {
+const getEntryColor = (source: ChatEntrySource) => {
+  return { borderColor: (source === "AI" ? magenta50 : interactive) as string }
+}
+
+const ChatHistory = ({ entries, streamingResponse }: ChatHistoryProps) => {
+  const allEntries = streamingResponse
+    ? [...entries, { message: streamingResponse, source: "AI" } as ChatEntry]
+    : entries
+
   return (
     <Tile className="chat-history">
       <Stack gap={5}>
-        {entries.map((entry, idx) => (
-          <span key={idx} className="chat-history-entry">
-            <p>{entry}</p>
+        {allEntries.map((entry, idx) => (
+          <span
+            key={idx}
+            className="chat-history-entry"
+            style={getEntryColor(entry.source)}
+          >
+            <p>{entry.message}</p>
           </span>
         ))}
       </Stack>
@@ -86,16 +119,27 @@ const ChatHistory = ({ entries }: ChatHistoryProps) => {
 }
 
 const AssistantChatPanel = () => {
-  // TODO: Create a new action to set nodes/edges directly from object
+  // TODO: Create a new action to set nodes/edges directly from object instead of JSON string.
   const { importFlowFromJson } = useAppActions()
   const [isOpen, setOpen] = useState(false)
-  const [chatEntries, setChatEntries] = useState<string[]>([])
+  const [chatEntries, setChatEntries] = useState<ChatEntry[]>([])
+  const [activeResponse, setActiveResponse] = useState("")
+
+  const updateResponseChunk = (chunk: string) =>
+    setActiveResponse((prev) => prev + chunk)
 
   const sendPrompt = async (input: string) => {
-    const response = await promptModel(input)
-    console.log(response)
-    importFlowFromJson(response)
-    setChatEntries((prev) => [...prev, input])
+    try {
+      const response = await promptModel(input, updateResponseChunk)
+      importFlowFromJson(response)
+      setChatEntries((prev) => [
+        ...prev,
+        { message: input, source: "user" },
+        { message: response, source: "AI" },
+      ])
+    } finally {
+      setActiveResponse("")
+    }
   }
 
   const display = isOpen ? { height: "30vh" } : { height: "2rem" }
@@ -119,7 +163,10 @@ const AssistantChatPanel = () => {
       {/* TODO: Display an error pop-up if LLM prompt fails  */}
       {isOpen && (
         <>
-          <ChatHistory entries={chatEntries} />
+          <ChatHistory
+            entries={chatEntries}
+            streamingResponse={activeResponse}
+          />
           <ChatInput handleInput={sendPrompt} />
         </>
       )}
