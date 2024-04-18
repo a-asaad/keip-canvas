@@ -1,3 +1,4 @@
+// @ts-expect-error: OverflowMenu is not expoerted properly from Carbon React
 import { OverflowMenu } from "@carbon/react"
 import { Menu } from "@carbon/react/icons"
 import ExportPng from "./ExportPng"

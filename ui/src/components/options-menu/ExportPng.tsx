@@ -31,8 +31,12 @@ const ExportPng = forwardRef<HTMLElement>(
         2
       )
 
-      toPng(document.querySelector(".react-flow__viewport")!, {
-        backgroundColor: layer01 as string,
+      const viewport: HTMLElement = document.querySelector(
+        ".react-flow__viewport"
+      )!
+
+      toPng(viewport, {
+        backgroundColor: layer01,
         width: IMAGE_WIDTH,
         height: IMAGE_HEIGHT,
         style: {

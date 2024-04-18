@@ -4,7 +4,7 @@ import { EipFlowNode } from "../../api/flow"
 import { getEdgesView, getNodesView } from "../../singletons/store"
 import { fuzzyMatchNodeEipIds } from "./fuzzyEipIdMatch"
 import { addLayout } from "./nodeLayouting"
-import { createFlowPrompt, updateFlowPrompt } from "./prompt"
+import { flowCreatePrompt, flowUpdatePrompt } from "./prompt"
 
 interface ModelFlowResponse {
   nodes: EipFlowNode[]
@@ -83,11 +83,12 @@ class LlmClient {
         })),
         edges: getEdgesView(),
       })
-      return await updateFlowPrompt.partial({
+      const prompt = await flowUpdatePrompt
+      return await prompt.partial({
         existingFlowJson: currFlow,
       })
     } else {
-      return createFlowPrompt
+      return await flowCreatePrompt
     }
   }
 

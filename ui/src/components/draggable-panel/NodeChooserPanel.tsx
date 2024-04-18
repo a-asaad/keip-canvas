@@ -42,7 +42,7 @@ const EipItem = ({ eipId }: EipItemProps) => {
     }),
   }))
 
-  const iconUrl = getIconUrl(eipId)
+  const iconUrl = getIconUrl(eipId)!
   const opacity = isDragging ? 0.5 : 1
 
   return (

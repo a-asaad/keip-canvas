@@ -116,16 +116,16 @@ const composedUpdatePrompt = new PipelinePromptTemplate({
   finalPrompt: fullUpdatePrompt,
 })
 
-const createFlowPrompt = await composedCreatePrompt.partial({
+const flowCreatePrompt = composedCreatePrompt.partial({
   responseFormat: responseJsonExample,
   eipIds: eipIdsJson,
 })
 
-const updateFlowPrompt = await composedUpdatePrompt.partial({
+const flowUpdatePrompt = composedUpdatePrompt.partial({
   responseFormat: responseJsonExample,
   eipIds: eipIdsJson,
 })
 
 // TODO: Refactor creating the prompts. Lots of duplicated logic.
 
-export { createFlowPrompt, updateFlowPrompt }
+export { flowCreatePrompt, flowUpdatePrompt }

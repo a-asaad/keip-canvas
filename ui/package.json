@@ -11,7 +11,7 @@
   },
   "engines": {
     "node": ">=20.0.0",
-    "npm" : ">=10.0.0"
+    "npm": ">=10.0.0"
   },
   "dependencies": {
     "@carbon/react": "^1.51.1",
@@ -28,6 +28,7 @@
     "zustand": "^4.5.1"
   },
   "devDependencies": {
+    "@types/carbon__colors": "^10.31.3",
     "@types/react": "^18.2.59",
     "@types/react-dom": "^18.2.19",
     "@typescript-eslint/eslint-plugin": "^6.21.0",

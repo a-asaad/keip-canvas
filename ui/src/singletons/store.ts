@@ -177,6 +177,7 @@ const useStore = create<AppStore>()(
     }),
     {
       name: "eipFlow",
+      version: 0,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) =>
         Object.fromEntries(

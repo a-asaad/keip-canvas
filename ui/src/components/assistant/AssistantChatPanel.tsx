@@ -96,7 +96,9 @@ const ChatInput = ({ handleInput }: ChatInputProps) => {
 }
 
 const getEntryColor = (source: ChatEntrySource) => {
-  return { borderColor: (source === "AI" ? magenta50 : interactive) as string }
+  return {
+    borderColor: source === "AI" ? magenta50 : interactive,
+  }
 }
 
 const ChatHistory = ({ entries, streamingResponse }: ChatHistoryProps) => {
