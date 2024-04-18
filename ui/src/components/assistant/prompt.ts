@@ -53,7 +53,7 @@ START_EIP_COMPONENT_LIST
 END_EIP_COMPONENT_LIST`
 )
 
-const existingDiagramPrompt = PromptTemplate.fromTemplate(
+const existingFlowPrompt = PromptTemplate.fromTemplate(
   `Use this existing flow JSON as the starting point:
 \`\`\`json
 {existingFlowJson}
@@ -84,7 +84,7 @@ const createPipeline = [
 
 const updatePipeline = [
   ...createPipeline.slice(0, createPipeline.length - 1),
-  { name: "existingDiagram", prompt: existingDiagramPrompt },
+  { name: "existingFlow", prompt: existingFlowPrompt },
   createPipeline[createPipeline.length - 1],
 ]
 
@@ -101,7 +101,7 @@ const fullUpdatePrompt = PromptTemplate.fromTemplate(
 
 {eipCatalog}
 
-{existingDiagram}
+{existingFlow}
 
 {input}`
 )
@@ -116,14 +116,16 @@ const composedUpdatePrompt = new PipelinePromptTemplate({
   finalPrompt: fullUpdatePrompt,
 })
 
-const createDiagramPrompt = await composedCreatePrompt.partial({
+const createFlowPrompt = await composedCreatePrompt.partial({
   responseFormat: responseJsonExample,
   eipIds: eipIdsJson,
 })
 
-const updateDiagramPrompt = await composedUpdatePrompt.partial({
+const updateFlowPrompt = await composedUpdatePrompt.partial({
   responseFormat: responseJsonExample,
   eipIds: eipIdsJson,
 })
 
-export { createDiagramPrompt, updateDiagramPrompt }
+// TODO: Refactor creating the prompts. Lots of duplicated logic.
+
+export { createFlowPrompt, updateFlowPrompt }

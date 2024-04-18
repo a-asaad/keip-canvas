@@ -2,8 +2,9 @@ import { Ollama } from "@langchain/community/llms/ollama"
 import { Edge } from "reactflow"
 import { EipFlowNode } from "../../api/flow"
 import { getEdgesView, getNodesView } from "../../singletons/store"
-import { getLayoutedNodes } from "./nodeLayouting"
-import { createDiagramPrompt, updateDiagramPrompt } from "./prompt"
+import { fuzzyMatchNodeEipIds } from "./fuzzyEipIdMatch"
+import { addLayout } from "./nodeLayouting"
+import { createFlowPrompt, updateFlowPrompt } from "./prompt"
 
 interface ModelFlowResponse {
   nodes: EipFlowNode[]
@@ -74,15 +75,19 @@ class LlmClient {
   private async generatePrompt() {
     const nodes = getNodesView()
     if (nodes && nodes.length > 0) {
-      const currDiagram = JSON.stringify({
-        nodes: nodes.map((n) => ({id: n.id, type: n.type, data: {eipId: n.data.eipId}})),
+      const currFlow = JSON.stringify({
+        nodes: nodes.map((n) => ({
+          id: n.id,
+          type: n.type,
+          data: { eipId: n.data.eipId },
+        })),
         edges: getEdgesView(),
       })
-      return await updateDiagramPrompt.partial({
-        existingFlowJson: currDiagram,
+      return await updateFlowPrompt.partial({
+        existingFlowJson: currFlow,
       })
     } else {
-      return createDiagramPrompt
+      return createFlowPrompt
     }
   }
 
@@ -106,7 +111,9 @@ class LlmClient {
       response.eipNodeConfigs = {}
     }
 
-    response.nodes = getLayoutedNodes(response.nodes, response.edges)
+    fuzzyMatchNodeEipIds(response.nodes)
+
+    addLayout(response.nodes, response.edges)
 
     return JSON.stringify(response)
   }

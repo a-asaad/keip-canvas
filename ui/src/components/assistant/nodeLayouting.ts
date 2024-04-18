@@ -7,7 +7,7 @@ const NODE_HEIGHT = 128
 const graph = new dagre.graphlib.Graph()
 graph.setDefaultEdgeLabel(() => ({}))
 
-export const getLayoutedNodes = (nodes: Node[], edges: Edge[]) => {
+export const addLayout = (nodes: Node[], edges: Edge[]) => {
   graph.setGraph({ rankdir: "LR" })
 
   nodes.forEach((node) => {
@@ -30,6 +30,4 @@ export const getLayoutedNodes = (nodes: Node[], edges: Edge[]) => {
 
     return node
   })
-
-  return nodes
 }

@@ -18,7 +18,7 @@ const componentFlatMap = getFlatMap(EIP_SCHEMA)
 export const lookupEipComponent = (eipId: EipId) => {
   const component = componentFlatMap.get(`${eipId.namespace}.${eipId.name}`)
   if (component === undefined) {
-    console.error(`Did not find component with id: ${JSON.stringify(eipId)}`)
+    console.warn(`Did not find component with id: ${JSON.stringify(eipId)}`)
   }
   return component
 }
