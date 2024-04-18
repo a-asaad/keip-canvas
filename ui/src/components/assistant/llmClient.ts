@@ -1,8 +1,9 @@
 import { Ollama } from "@langchain/community/llms/ollama"
 import { Edge } from "reactflow"
 import { EipFlowNode } from "../../api/flow"
+import { getEdgesView, getNodesView } from "../../singletons/store"
 import { getLayoutedNodes } from "./nodeLayouting"
-import { partialPrompt } from "./prompt"
+import { createDiagramPrompt, updateDiagramPrompt } from "./prompt"
 
 interface ModelFlowResponse {
   nodes: EipFlowNode[]
@@ -18,7 +19,6 @@ interface PromptResponse {
 
 class LlmClient {
   private llm
-  private chain
   private abortCtrl
 
   constructor() {
@@ -31,7 +31,6 @@ class LlmClient {
       temperature: 0,
     })
 
-    this.chain = partialPrompt.pipe(this.llm)
     this.abortCtrl = new AbortController()
   }
 
@@ -41,7 +40,9 @@ class LlmClient {
   ): Promise<PromptResponse> {
     let rawResponse = ""
     try {
-      const responseStream = await this.chain.stream({
+      const prompt = await this.generatePrompt()
+      const chain = prompt.pipe(this.llm)
+      const responseStream = await chain.stream({
         userInput: userInput,
       })
 
@@ -68,6 +69,21 @@ class LlmClient {
 
   public abort(): void {
     this.abortCtrl.abort()
+  }
+
+  private async generatePrompt() {
+    const nodes = getNodesView()
+    if (nodes && nodes.length > 0) {
+      const currDiagram = JSON.stringify({
+        nodes: nodes.map((n) => ({id: n.id, type: n.type, data: {eipId: n.data.eipId}})),
+        edges: getEdgesView(),
+      })
+      return await updateDiagramPrompt.partial({
+        existingFlowJson: currDiagram,
+      })
+    } else {
+      return createDiagramPrompt
+    }
   }
 
   // TODO: Use Langchain custom output parser

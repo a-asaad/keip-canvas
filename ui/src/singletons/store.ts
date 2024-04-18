@@ -71,7 +71,7 @@ interface AppStore {
   appActions: AppActions
 }
 
-// If app becomes too slow, might need to switch to async storage.
+// If app becomes too slow, might need to switch to async persistent storage.
 const useStore = create<AppStore>()(
   persist(
     (set) => ({
@@ -280,3 +280,9 @@ export const useFlowStore = () =>
   )
 
 export const useAppActions = () => useStore((state) => state.appActions)
+
+// Warning: the following exports are not intended for use in React components
+export const getNodesView: () => Readonly<EipFlowNode[]> = () =>
+  useStore.getState().nodes
+export const getEdgesView: () => Readonly<Edge[]> = () =>
+  useStore.getState().edges

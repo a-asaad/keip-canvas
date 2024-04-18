@@ -1,4 +1,4 @@
-import { PromptTemplate } from "@langchain/core/prompts"
+import { PipelinePromptTemplate, PromptTemplate } from "@langchain/core/prompts"
 import { EipId } from "../../api/id"
 import { EIP_SCHEMA } from "../../singletons/eipDefinitions"
 
@@ -35,6 +35,38 @@ const responseJsonExample = `{
   }
   `
 
+const flowExamplePrompt = PromptTemplate.fromTemplate(
+  `The response MUST be a JSON that matches the following flow schema:
+START_FLOW_SCHEMA
+\`\`\`json
+{responseFormat}
+\`\`\`
+END_FLOW_SCHEMA
+
+Don't add any extraneous fields or properties to the response, stick to the JSON keys outlined in the example above.`
+)
+
+const eipCatalogPrompt = PromptTemplate.fromTemplate(
+  `each node's data.eipId field corresponds to a Spring Integration component and MUST be chosen from the following list of eipIds:
+START_EIP_COMPONENT_LIST
+{eipIds}
+END_EIP_COMPONENT_LIST`
+)
+
+const existingDiagramPrompt = PromptTemplate.fromTemplate(
+  `Use this existing flow JSON as the starting point:
+\`\`\`json
+{existingFlowJson}
+\`\`\``
+)
+
+const inputPrompt = PromptTemplate.fromTemplate(
+  `Avoid adding any explicit channels to the flow
+
+Taking the above into account, respond to the following request:
+{userInput}`
+)
+
 // TODO: Do this async instead?
 const eipIds = Object.entries(EIP_SCHEMA).reduce((acc, curr) => {
   const [namespace, components] = curr
@@ -44,29 +76,54 @@ const eipIds = Object.entries(EIP_SCHEMA).reduce((acc, curr) => {
 
 const eipIdsJson = JSON.stringify(eipIds)
 
-const promptTemplate = PromptTemplate.fromTemplate(
-  `The response MUST be a JSON that matches the following flow schema:
-START_FLOW_SCHEMA
-\`\`\`json
-{responseFormat}
-\`\`\`
-END_FLOW_SCHEMA
+const createPipeline = [
+  { name: "flowExampleJson", prompt: flowExamplePrompt },
+  { name: "eipCatalog", prompt: eipCatalogPrompt },
+  { name: "input", prompt: inputPrompt },
+]
 
-each node's data.eipId field corresponds to a Spring Integration component and MUST be chosen from the following list of eipIds:
+const updatePipeline = [
+  ...createPipeline.slice(0, createPipeline.length - 1),
+  { name: "existingDiagram", prompt: existingDiagramPrompt },
+  createPipeline[createPipeline.length - 1],
+]
 
-START_EIP_COMPONENT_LIST
-{eipIds}
-END_EIP_COMPONENT_LIST
+const fullCreatePrompt = PromptTemplate.fromTemplate(
+  `{flowExampleJson}
 
-Avoid adding any explicit channels to the flow
+{eipCatalog}
 
-Taking the above into account, respond to the following request:
-{userInput}`
+{input}`
 )
 
-const partialPrompt = await promptTemplate.partial({
+const fullUpdatePrompt = PromptTemplate.fromTemplate(
+  `{flowExampleJson}
+
+{eipCatalog}
+
+{existingDiagram}
+
+{input}`
+)
+
+const composedCreatePrompt = new PipelinePromptTemplate({
+  pipelinePrompts: createPipeline,
+  finalPrompt: fullCreatePrompt,
+})
+
+const composedUpdatePrompt = new PipelinePromptTemplate({
+  pipelinePrompts: updatePipeline,
+  finalPrompt: fullUpdatePrompt,
+})
+
+const createDiagramPrompt = await composedCreatePrompt.partial({
   responseFormat: responseJsonExample,
   eipIds: eipIdsJson,
 })
 
-export { partialPrompt }
+const updateDiagramPrompt = await composedUpdatePrompt.partial({
+  responseFormat: responseJsonExample,
+  eipIds: eipIdsJson,
+})
+
+export { createDiagramPrompt, updateDiagramPrompt }
