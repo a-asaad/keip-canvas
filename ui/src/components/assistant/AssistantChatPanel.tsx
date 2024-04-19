@@ -9,7 +9,7 @@ import {
   TextArea,
   Tile,
 } from "@carbon/react"
-import { CloseOutline, Send } from "@carbon/react/icons"
+import { CloseOutline, MachineLearning, Send } from "@carbon/react/icons"
 import { interactive } from "@carbon/themes"
 import { useState } from "react"
 import { useAppActions } from "../../singletons/store"
@@ -153,13 +153,16 @@ const AssistantChatPanel = () => {
     <div className="chat-panel" style={display}>
       <TableToolbar size="sm">
         <TableToolbarContent className="chat-toolbar">
-          <Button
+          <IconButton
+            className="chat-toolbar-button"
+            label="Keip Assistant"
+            align="left"
             kind="secondary"
-            size="sm"
+            size="lg"
             onClick={() => setOpen((prev) => !prev)}
           >
-            Chat
-          </Button>
+            <MachineLearning />
+          </IconButton>
         </TableToolbarContent>
       </TableToolbar>
 
